@@ -27,7 +27,9 @@ export function AuthProvider({ children }) {
   // Daftar email admin - GANTI DENGAN EMAIL ANDA
   const adminEmails = [
     'azmifadhilfakhrurrazi12@gmail.com',
-    'your-email@gmail.com'
+    'akunabraham711@gmail.com',
+    'akunabraham711@gmail.com',
+    'solvesmartcompany.id@gmail.com'
   ];
 
   const getUserRole = (email) => {
