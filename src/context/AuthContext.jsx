@@ -1,69 +1,122 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth, provider } from "../firebase";
-import {
-  signInWithRedirect,
-  getRedirectResult,
+// context/AuthContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-} from "firebase/auth";
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+import { auth } from '../firebase';
 
 const AuthContext = createContext();
-export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({ children }) => {
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Cek hasil login setelah redirect (hanya pertama kali)
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          console.log("Login berhasil setelah redirect:", result.user);
-          setUser(result.user);
-        }
-      })
-      .catch((error) => {
-        if (error.code !== "auth/no-auth-event") {
-          console.error("Error setelah redirect:", error);
-        }
-      });
-  }, []);
+  // Daftar email admin - GANTI DENGAN EMAIL ANDA
+  const adminEmails = [
+    'azmifadhilfakhrurrazi12@gmail.com',
+    'your-email@gmail.com'
+  ];
 
-  // 🔹 Pantau perubahan user login/logout
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
+  const getUserRole = (email) => {
+    if (!email) return 'member';
+    return adminEmails.includes(email.toLowerCase()) ? 'admin' : 'member';
+  };
 
-    return () => unsubscribe();
-  }, []);
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      const userWithRole = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        role: getUserRole(user.email)
+      };
+      
+      return userWithRole;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
 
-  // 🔹 Login Google pakai akun browser (redirect)
   const loginWithGoogle = async () => {
     try {
-      await signInWithRedirect(auth, provider);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      const userWithRole = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        role: getUserRole(user.email)
+      };
+      
+      return userWithRole;
     } catch (error) {
-      console.error("Login gagal:", error);
+      console.error('Google login error:', error);
+      throw error;
     }
   };
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userWithRole = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: getUserRole(user.email)
+        };
+        setUser(userWithRole);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
 
   const value = {
     user,
-    loading,
-    isAuthenticated: !!user,
-    loginWithGoogle,
+    login,
     logout,
+    loginWithGoogle,
+    loading,
+    isAdmin: user?.role === 'admin'
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {!loading && children} {/* PASTIKAN TIDAK ADA ROUTER DI SINI */}
     </AuthContext.Provider>
   );
-};
+}
