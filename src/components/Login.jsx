@@ -33,20 +33,17 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Luxury Black Background with Gold Accents */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Subtle Gold Orbs */}
+
         <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
         <div className="absolute top-1/4 right-0 w-80 h-80 bg-yellow-500/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl"></div>
         
-        {/* Gold Geometric Patterns */}
         <div className="absolute top-10 right-10 w-32 h-32 border border-amber-500/10 rounded-lg rotate-45"></div>
         <div className="absolute bottom-20 left-10 w-24 h-24 border border-amber-500/10 rounded-full"></div>
         <div className="absolute top-1/2 right-1/4 w-16 h-16 border border-amber-500/10 rotate-12"></div>
       </div>
 
-      {/* Subtle Gold Particles */}
       <div className="absolute inset-0">
         {[...Array(15)].map((_, i) => (
           <div
@@ -62,7 +59,6 @@ const Login = () => {
         ))}
       </div>
 
-      {/* Elegant Gold Stars */}
       <div className="absolute inset-0">
         {[...Array(6)].map((_, i) => (
           <div
@@ -77,16 +73,13 @@ const Login = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Premium Black Card Container */}
         <div className="bg-gray-900/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-amber-500/20 overflow-hidden transform transition-all duration-500">
           
-          {/* Luxury Header */}
           <div className="relative p-8 text-center border-b border-amber-500/20 bg-gradient-to-b from-gray-800 to-gray-900">
-            {/* Decorative Gold Elements */}
+
             <div className="absolute top-4 right-4 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
             <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-amber-300 rounded-full"></div>
             
-            {/* Premium Badge */}
             <div className="absolute top-3 left-3">
               <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 px-2 py-1 rounded-full text-xs font-medium">
                 <FaCrown className="text-xs" />
@@ -94,13 +87,11 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Diamond Decoration */}
             <div className="absolute top-3 right-3">
               <FaGem className="text-amber-300 text-sm" />
             </div>
 
             <div className="relative z-10">
-              {/* Animated Light Bulb Logo */}
               <div className={`w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border ${lightOn ? 'border-amber-400/30' : 'border-amber-600/20'} transition-all duration-500`}>
                 <div className="w-14 h-14 bg-gray-700/50 rounded-xl flex items-center justify-center backdrop-blur-sm">
                   <FaLightbulb className={`text-2xl transition-all duration-500 ${lightOn ? 'text-amber-300' : 'text-amber-600'} ${lightOn ? 'animate-pulse' : ''}`} />
@@ -116,9 +107,7 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Content Section */}
           <div className="p-8">
-            {/* Minimal Features Grid */}
             <div className="grid grid-cols-3 gap-6 mb-8">
               <div className="text-center group">
                 <div className={`w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-500/10 transition-all duration-300 border ${lightOn ? 'border-amber-500/20' : 'border-gray-600'}`}>
@@ -140,7 +129,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="bg-amber-900/20 border border-amber-500/30 text-amber-200 px-4 py-3 rounded-lg mb-6 text-sm text-center">
                 <div className="flex items-center justify-center gap-2">
@@ -150,30 +138,25 @@ const Login = () => {
               </div>
             )}
 
-            {/* Elegant Google Login Button - MORE GOLD */}
             <div 
               className="relative group"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
-              {/* Gold Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-sm"></div>
               
-              {/* Main Button - Enhanced Gold */}
               <button
                 onClick={handleGoogleLogin}
                 disabled={loading}
                 className="relative w-full bg-gradient-to-r from-amber-900/30 to-amber-800/30 border border-amber-500/40 text-amber-100 py-4 px-6 rounded-xl font-medium flex items-center justify-center gap-3 transition-all duration-300 hover:border-amber-400/60 hover:bg-gradient-to-r hover:from-amber-800/40 hover:to-amber-700/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group overflow-hidden shadow-lg"
               >
-                {/* Gold Shimmer Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                 
-                {/* Loading State */}
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-amber-400/50 border-t-amber-300 rounded-full animate-spin"></div>
                     <span className="text-sm bg-gradient-to-r from-amber-200 to-amber-300 bg-clip-text text-transparent font-semibold">
-                      Accessing Premium...
+                      Haloo...
                     </span>
                   </>
                 ) : (

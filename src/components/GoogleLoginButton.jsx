@@ -1,4 +1,3 @@
-// components/GoogleLoginButton.jsx
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { auth, provider } from "../firebase";
@@ -7,7 +6,6 @@ import { signInWithRedirect, getRedirectResult } from "firebase/auth";
 const GoogleLoginButton = ({ onSuccess, onError }) => {
   const handleGoogleLogin = async () => {
     try {
-      // 🔸 Pakai Redirect agar bisa pakai akun Google yang sudah login di browser
       await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Login gagal:", error);
@@ -16,7 +14,6 @@ const GoogleLoginButton = ({ onSuccess, onError }) => {
   };
 
   React.useEffect(() => {
-    // 🔸 Dapatkan hasil login setelah redirect
     getRedirectResult(auth)
       .then((result) => {
         if (result?.user) {

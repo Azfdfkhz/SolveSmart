@@ -65,7 +65,6 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Minimalist Top Bar - Hanya Logo & Notification */}
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled 
           ? 'bg-black/80 backdrop-blur-2xl border-b border-gold/20' 
@@ -89,7 +88,6 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* Right Controls Minimal */}
             <div className="flex items-center space-x-3">
               {/* Notification */}
               <button className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 border border-white/10">
@@ -97,7 +95,7 @@ const Navbar = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              {/* User Avatar Minimal */}
+              {/* User Avatar */}
               <div 
                 onClick={navigationHandlers.profile}
                 className="w-9 h-9 rounded-xl overflow-hidden border border-gold/50 cursor-pointer hover:border-gold transition-all duration-300"
@@ -119,7 +117,6 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Luxury Bottom Navigation - Center Stage */}
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
         <div className="relative">
           {/* Glow Effect */}
@@ -170,7 +167,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Spacer untuk fixed navbar */}
       <div className="h-16"></div>
       <div className="h-24"></div>
 

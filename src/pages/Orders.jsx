@@ -11,10 +11,10 @@ import {
   FiDownload,
   FiDollarSign,
   FiCreditCard,
-  FaQrCode,
+  FiQrCode,
   FiCopy,
   FiShoppingBag
-} from 'react-icons/fi/fa';
+} from 'react-icons/fi';
 import { FaWhatsapp, FaSpinner } from 'react-icons/fa';
 
 const Orders = () => {

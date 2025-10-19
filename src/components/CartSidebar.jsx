@@ -1,4 +1,3 @@
-// components/CartSidebar.jsx (FIXED IMPORT)
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,14 +11,13 @@ import {
   FiTrash2, 
   FiArrowRight, 
   FiCheck,
-  FiArrowLeft, // TAMBAHKAN INI
-  FiDollarSign, // TAMBAHKAN INI
-  FiCreditCard // TAMBAHKAN INI
+  FiArrowLeft, 
+  FiDollarSign, 
+  FiCreditCard 
 } from 'react-icons/fi';
-import { FaSpinner, FaQrcode } from 'react-icons/fa'; // UBAH FaQrcode ke sini
+import { FaSpinner, FaQrcode } from 'react-icons/fa'; 
 
 const CartSidebar = () => {
-  // Debug: Log ketika komponen render
   console.log('CartSidebar rendering...');
 
   const {
@@ -44,14 +42,12 @@ const CartSidebar = () => {
     note: ''
   });
 
-  // State untuk payment modal
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [createdOrder, setCreatedOrder] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
 
-  // Safe function untuk get cart total
   const safeGetCartTotal = () => {
     try {
       return getCartTotal ? getCartTotal() : 0;
@@ -89,7 +85,6 @@ const CartSidebar = () => {
       return;
     }
     
-    // Jika user belum login, redirect ke login
     if (!user) {
       showToast('Silakan login terlebih dahulu untuk checkout', 'error');
       handleClose();
@@ -97,7 +92,6 @@ const CartSidebar = () => {
       return;
     }
 
-    // Tampilkan form checkout
     console.log('Showing checkout form');
     setShowCheckoutForm(true);
   };
@@ -141,11 +135,9 @@ const CartSidebar = () => {
 
       console.log('Order data:', orderData);
 
-      // Create order
       const order = await createOrder(orderData);
       console.log('Order created:', order);
       
-      // Simpan order yang dibuat dan tampilkan modal pembayaran
       setCreatedOrder(order);
       setShowCheckoutForm(false);
       setShowPaymentModal(true);
@@ -160,7 +152,6 @@ const CartSidebar = () => {
     }
   };
 
-  // Fungsi untuk handle payment
   const handlePayment = () => {
     console.log('Payment method selected:', selectedPaymentMethod);
     
@@ -188,7 +179,6 @@ const CartSidebar = () => {
         throw new Error('Order tidak ditemukan');
       }
       
-      // Clear cart dan close modal
       if (clearCart) {
         clearCart();
       }
@@ -222,7 +212,6 @@ const CartSidebar = () => {
         throw new Error('Order tidak ditemukan');
       }
       
-      // Clear cart dan close modal
       if (clearCart) {
         clearCart();
       }
@@ -308,7 +297,6 @@ const CartSidebar = () => {
 
   return (
     <>
-      {/* Overlay */}
       <div 
         className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${
           isClosing ? 'opacity-0' : 'opacity-100'
@@ -348,7 +336,7 @@ const CartSidebar = () => {
 
         {/* Main Content Area */}
         <div className="flex flex-col h-[calc(100vh-60px)]">
-          {/* Cart Items - Scrollable Area */}
+          {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-3">
             {!showCheckoutForm ? (
               <>
