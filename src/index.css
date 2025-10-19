@@ -20,3 +20,31 @@
         .animation-delay-4000 {
           animation-delay: 4s;
         }
+                .text-gold {
+          color: #D4AF37;
+        }
+        .bg-gold {
+          background-color: #D4AF37;
+        }
+        .border-gold {
+          border-color: #D4AF37;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(180deg); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+        .hover\\:shadow-3xl:hover {
+          box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.6);
+        }

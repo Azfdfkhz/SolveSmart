@@ -2,25 +2,19 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FaGoogle, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaGoogle, FaRocket, FaShieldAlt, FaBolt, FaStar, FaChevronRight } from "react-icons/fa";
 
 const LoginPage = () => {
-  const { user, login, loginWithGoogle, loading } = useAuth();
+  const { user, loginWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
   
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [error, setError] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
 
   // 🔹 Redirect jika user sudah login
   useEffect(() => {
-    console.log("LoginPage - Current user:", user);
-    console.log("LoginPage - Loading:", loading);
-    
     if (user && !loading) {
-      console.log("User sudah login, redirecting to home...");
       navigate("/home");
     }
   }, [user, loading, navigate]);
@@ -30,183 +24,189 @@ const LoginPage = () => {
     try {
       setIsLoggingIn(true);
       setError("");
-      console.log("Starting Google login...");
-      
       await loginWithGoogle();
-      console.log("Google login successful");
-      
     } catch (error) {
       console.error("Login Google gagal:", error);
-      setError("Gagal login dengan Google. Coba lagi ya!");
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  // 🔹 Handle login dengan email/password
-  const handleEmailLogin = async (e) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      setError("Email dan password harus diisi");
-      return;
-    }
-
-    try {
-      setIsLoggingIn(true);
-      setError("");
-      console.log("Starting email login...");
-      
-      await login(email, password);
-      console.log("Email login successful");
-      
-    } catch (error) {
-      console.error("Login email gagal:", error);
-      
-      let errorMessage = "Gagal login";
-      if (error.code === "auth/invalid-email") {
-        errorMessage = "Email tidak valid";
-      } else if (error.code === "auth/user-not-found") {
-        errorMessage = "User tidak ditemukan";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Password salah";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage = "Terlalu banyak percobaan, coba lagi nanti";
-      } else {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
+      setError("Gagal login dengan Google. Silakan coba lagi.");
     } finally {
       setIsLoggingIn(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">SolveSmart</h1>
-          <p className="text-gray-600">Masuk ke akun Anda</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
-            {error}
-          </div>
-        )}
+      {/* Floating Particles */}
+      <div className="absolute inset-0">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${20 + Math.random() * 10}s`
+            }}
+          />
+        ))}
+      </div>
 
-        {/* Google Login Button */}
-        <button
-          onClick={handleGoogleLogin}
-          disabled={isLoggingIn || loading}
-          className="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-medium flex items-center justify-center space-x-3 hover:bg-gray-50 transition duration-200 mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoggingIn ? (
-            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-          ) : (
-            <FaGoogle className="text-red-500 text-lg" />
-          )}
-          <span>
-            {isLoggingIn ? "Sedang login..." : "Login dengan Google"}
-          </span>
-        </button>
+      {/* Shooting Stars */}
+      <div className="absolute inset-0">
+        {[...Array(3)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white animate-shoot"
+            style={{
+              top: `${20 + i * 30}%`,
+              left: `${-10 + i * 10}%`,
+              animationDelay: `${i * 3}s`
+            }}
+          />
+        ))}
+      </div>
 
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">atau dengan email</span>
-          </div>
-        </div>
-
-        {/* Email Login Form */}
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="email@example.com"
-                required
-                disabled={isLoggingIn}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Masukkan password"
-                required
-                disabled={isLoggingIn}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                disabled={isLoggingIn}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
+      <div className="relative w-full max-w-lg">
+        {/* Main Card */}
+        <div className="bg-white/5 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden transform transition-all duration-500 hover:shadow-3xl">
+          
+          {/* Premium Header */}
+          <div className="relative p-12 text-center bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-cyan-500/20 border-b border-white/10">
+            {/* Decorative Elements */}
+            <div className="absolute top-4 right-4 w-3 h-3 bg-cyan-400 rounded-full animate-ping"></div>
+            <div className="absolute bottom-4 left-4 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+            
+            <div className="relative z-10">
+              {/* Animated Logo */}
+              <div className="w-28 h-28 bg-gradient-to-br from-purple-500 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl transform transition-transform duration-500 hover:scale-105">
+                <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+                  <FaRocket className="text-white text-3xl animate-float" />
+                </div>
+              </div>
+              
+              <h1 className="text-5xl font-bold text-white mb-4 tracking-tight bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                SolveSmart
+              </h1>
+              <p className="text-white/70 text-lg font-light mb-2">
+                AI-Powered Solution Platform
+              </p>
+              
+              {/* Features Badge */}
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 mt-4">
+                <FaStar className="text-yellow-400 text-sm" />
+                <span className="text-white/80 text-sm font-medium">Premium Experience</span>
+              </div>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoggingIn || loading}
-            className="w-full bg-blue-500 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isLoggingIn ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Sedang login...
-              </>
-            ) : (
-              'Masuk dengan Email'
+          {/* Content Section */}
+          <div className="p-12">
+            {/* Features Grid */}
+            <div className="grid grid-cols-3 gap-6 mb-10">
+              <div className="text-center group">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-white/15 transition-all duration-300 backdrop-blur-sm border border-white/10">
+                  <FaShieldAlt className="text-white text-lg" />
+                </div>
+                <p className="text-white/70 text-xs font-medium">Secure</p>
+              </div>
+              <div className="text-center group">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-white/15 transition-all duration-300 backdrop-blur-sm border border-white/10">
+                  <FaBolt className="text-white text-lg" />
+                </div>
+                <p className="text-white/70 text-xs font-medium">Fast</p>
+              </div>
+              <div className="text-center group">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-white/15 transition-all duration-300 backdrop-blur-sm border border-white/10">
+                  <FaRocket className="text-white text-lg" />
+                </div>
+                <p className="text-white/70 text-xs font-medium">Modern</p>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/30 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm backdrop-blur-sm text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                  {error}
+                </div>
+              </div>
             )}
-          </button>
-        </form>
 
-        {/* Debug Info */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-          <p className="text-sm text-gray-600 text-center">
-            <strong>Status:</strong> {loading ? "Memeriksa sesi..." : "Siap login"}
-          </p>
-          <p className="text-xs text-gray-500 text-center mt-1">
-            User: {user ? "Logged in" : "Not logged in"}
-          </p>
+            {/* Google Login Button */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              {/* Animated Background Glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 rounded-2xl blur-lg opacity-0 group-hover:opacity-50 transition-all duration-500"></div>
+              
+              {/* Main Button */}
+              <button
+                onClick={handleGoogleLogin}
+                disabled={isLoggingIn || loading}
+                className="relative w-full bg-white/10 backdrop-blur-xl border border-white/20 text-white py-5 px-6 rounded-2xl font-semibold flex items-center justify-center gap-4 transition-all duration-500 hover:bg-white/15 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
+              >
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                
+                {/* Loading State */}
+                {isLoggingIn ? (
+                  <>
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span className="text-lg">Memproses...</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <FaGoogle className="text-2xl transition-transform duration-300 group-hover:scale-110" />
+                      {/* Icon Glow */}
+                      <div className="absolute inset-0 bg-white/20 rounded-full blur-sm scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <span className="text-lg bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+                      Login dengan Google
+                    </span>
+                    <FaChevronRight className={`text-white/60 transition-all duration-300 ${isHovered ? 'translate-x-1' : ''}`} />
+                  </>
+                )}
+              </button>
+
+              {/* Floating particles around button */}
+              <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-ping"></div>
+              <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-cyan-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200 animate-ping"></div>
+            </div>
+
+            {/* Footer Text */}
+            <div className="text-center mt-8">
+              <p className="text-white/50 text-sm font-light">
+                Dengan login, Anda menyetujui{' '}
+                <span className="text-white/70 hover:text-white cursor-pointer transition-colors duration-200">
+                  Terms of Service
+                </span>
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Test Credentials */}
-        <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-          <p className="text-xs text-yellow-800 text-center">
-            <strong>Tips:</strong> Pastikan email sudah terdaftar di Firebase Authentication
-          </p>
+        {/* Status Indicator */}
+        <div className="text-center mt-6">
+          <div className="inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
+            <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : user ? 'bg-green-400' : 'bg-blue-400'}`}></div>
+            <span className="text-white/60 text-sm">
+              {loading ? "Memeriksa sesi..." : user ? "Sudah login" : "Siap login"}
+            </span>
+          </div>
         </div>
       </div>
+
     </div>
   );
 };

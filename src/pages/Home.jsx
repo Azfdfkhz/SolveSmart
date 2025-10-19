@@ -1,18 +1,46 @@
-// Home.jsx (Modern Luxury Blue)
-import React, { useState } from 'react';
+// Home.jsx (Modern Luxury Blue) - WITH CATEGORY TABS
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProduct } from '../context/ProductContext';
+import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
+import CartSidebar from '../components/CartSidebar';
 import { FiChevronRight, FiStar, FiShoppingBag, FiTrendingUp } from 'react-icons/fi';
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState('Template');
+  const [activeTab, setActiveTab] = useState('All');
   const { user } = useAuth();
   const { products, loading } = useProduct();
+  const { getCartItemsCount, toggleCart } = useCart();
   const navigate = useNavigate();
 
-  const tabs = ['Template', 'Web', 'PPT', 'Poster', 'Social Media'];
+  // Generate tabs dari kategori produk yang ada
+  const tabs = useMemo(() => {
+    const categories = ['All']; // Always include 'All' tab
+    
+    // Extract unique categories from products
+    products.forEach(product => {
+      if (product.category && !categories.includes(product.category)) {
+        categories.push(product.category);
+      }
+    });
+
+    // Fallback categories if no products have categories
+    if (categories.length === 1) {
+      return ['All', 'Template', 'Web', 'PPT', 'Poster', 'Social Media'];
+    }
+
+    return categories;
+  }, [products]);
+
+  // Filter products berdasarkan activeTab
+  const filteredProducts = useMemo(() => {
+    if (activeTab === 'All') {
+      return products;
+    }
+    return products.filter(product => product.category === activeTab);
+  }, [products, activeTab]);
 
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
@@ -23,6 +51,7 @@ const Home = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         <Navbar />
+        <CartSidebar />
         <div className="max-w-6xl mx-auto px-6 py-8 pb-24">
           {/* Welcome Skeleton */}
           <div className="mb-8">
@@ -71,6 +100,9 @@ const Home = () => {
       {/* Navbar */}
       <Navbar />
 
+      {/* Cart Sidebar */}
+      <CartSidebar />
+
       {/* Main Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-8 pb-24">
         {/* Welcome Section */}
@@ -78,15 +110,17 @@ const Home = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold text-white mb-2">
-                Welcome back, {user?.displayName || "User"} 👋
+                Welcome back, {user?.displayName || "User"} 
               </h2>
               <p className="text-blue-200 text-lg">
-                Smart Solution Complete Result
+                Smart Solution Complete Result...
               </p>
             </div>
             <div className="hidden md:flex items-center space-x-2 bg-blue-800 bg-opacity-50 px-4 py-2 rounded-2xl border border-blue-700">
               <FiTrendingUp className="w-5 h-5 text-cyan-400" />
-              <span className="text-white text-sm font-medium">Best Quality</span>
+              <span className="text-white text-sm font-medium">
+                {filteredProducts.length} Products
+              </span>
             </div>
           </div>
         </div>
@@ -100,15 +134,18 @@ const Home = () => {
             <div className="max-w-2xl">
               
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                Disini <span className="text-cyan-400">Nanti Iklan</span>
+                Discover <span className="text-cyan-400">Amazing Templates</span>
               </h1>
               
               <p className="text-blue-100 text-lg md:text-xl mb-6 leading-relaxed">
                 Professional templates designed to make your projects stand out with luxury quality
               </p>
               
-              <button className="bg-white text-blue-900 px-8 py-3 rounded-2xl font-semibold hover:bg-cyan-50 transition-all duration-300 shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40 transform hover:-translate-y-0.5">
-                Explore Collection
+              <button 
+                onClick={() => setActiveTab('All')}
+                className="bg-white text-blue-900 px-8 py-3 rounded-2xl font-semibold hover:bg-cyan-50 transition-all duration-300 shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40 transform hover:-translate-y-0.5"
+              >
+                Explore All Products
               </button>
             </div>
           </div>
@@ -123,39 +160,74 @@ const Home = () => {
         {/* Categories Tabs */}
         <div className="mb-8">
           <div className="flex space-x-3 overflow-x-auto scrollbar-hide pb-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300 flex items-center space-x-2 ${
-                  activeTab === tab
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-600/30'
-                    : 'bg-blue-800 bg-opacity-30 text-blue-200 hover:bg-blue-800 hover:bg-opacity-50 border border-blue-700 border-opacity-30'
-                }`}
-              >
-                <FiShoppingBag className="w-4 h-4" />
-                <span>{tab}</span>
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              // Hitung jumlah produk per kategori
+              const productCount = tab === 'All' 
+                ? products.length 
+                : products.filter(p => p.category === tab).length;
+
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-3 rounded-2xl font-semibold whitespace-nowrap transition-all duration-300 flex items-center space-x-2 ${
+                    activeTab === tab
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-600/30'
+                      : 'bg-blue-800 bg-opacity-30 text-blue-200 hover:bg-blue-800 hover:bg-opacity-50 border border-blue-700 border-opacity-30'
+                  }`}
+                >
+                  <FiShoppingBag className="w-4 h-4" />
+                  <span>{tab}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === tab 
+                      ? 'bg-white text-blue-600' 
+                      : 'bg-blue-700 text-blue-200'
+                  }`}>
+                    {productCount}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+        </div>
+
+        {/* Products Count Info */}
+        <div className="mb-6">
+          <p className="text-blue-300 text-sm">
+            Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} 
+            {activeTab !== 'All' && ` in ${activeTab}`}
+          </p>
         </div>
 
         {/* Products Grid */}
         <div className="space-y-4">
-          {products.length === 0 ? (
+          {filteredProducts.length === 0 ? (
             <div className="text-center py-16">
               <div className="bg-blue-800 bg-opacity-20 rounded-3xl p-12 border border-blue-700 border-opacity-30 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-blue-700 bg-opacity-30 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-600 border-opacity-20">
                   <FiShoppingBag className="w-8 h-8 text-blue-400" />
                 </div>
-                <h3 className="text-white text-xl font-semibold mb-2">No Products Available</h3>
-                <p className="text-blue-300 text-sm">
-                  Premium templates will be available soon
+                <h3 className="text-white text-xl font-semibold mb-2">
+                  No {activeTab !== 'All' ? activeTab : ''} Products Available
+                </h3>
+                <p className="text-blue-300 text-sm mb-4">
+                  {activeTab !== 'All' 
+                    ? `No products found in ${activeTab} category` 
+                    : 'No products available at the moment'
+                  }
                 </p>
+                {activeTab !== 'All' && (
+                  <button
+                    onClick={() => setActiveTab('All')}
+                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                  >
+                    View All Products
+                  </button>
+                )}
               </div>
             </div>
           ) : (
-            products.map((product) => (
+            filteredProducts.map((product) => (
               <div 
                 key={product.id}
                 className="group bg-gradient-to-br from-blue-800/30 to-blue-900/20 rounded-3xl p-4 cursor-pointer hover:from-blue-700/40 hover:to-blue-800/30 transition-all duration-500 border border-blue-700 border-opacity-20 hover:border-cyan-500 hover:border-opacity-30 backdrop-blur-sm hover:shadow-2xl hover:shadow-blue-900/20 transform hover:-translate-y-1"
@@ -180,9 +252,16 @@ const Home = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="text-lg font-bold text-white group-hover:text-cyan-100 transition-colors duration-300 truncate">
-                          {product.title}
-                        </h3>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="text-lg font-bold text-white group-hover:text-cyan-100 transition-colors duration-300 truncate">
+                            {product.title}
+                          </h3>
+                          {product.category && (
+                            <span className="bg-cyan-500/20 text-cyan-400 text-xs px-2 py-1 rounded-full border border-cyan-400/30">
+                              {product.category}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-blue-300 text-sm mt-1 line-clamp-2">
                           {product.subtitle}
                         </p>
@@ -205,6 +284,7 @@ const Home = () => {
                         )}
                       </div>
                       
+                      {/* HANYA TOMBOL DETAIL (CHEVRON) SAJA */}
                       <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center group-hover:from-cyan-500 group-hover:to-blue-500 transition-all duration-300 shadow-lg shadow-blue-900/30 group-hover:shadow-cyan-900/40">
                         <FiChevronRight className="w-5 h-5 text-white transform group-hover:translate-x-0.5 transition-transform duration-300" />
                       </div>
@@ -216,10 +296,20 @@ const Home = () => {
           )}
         </div>
 
-        {/* Floating CTA */}
-        <div className="fixed bottom-24 right-6 z-20">
-          <button className="w-14 h-14 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-cyan-900/40 hover:shadow-cyan-900/60 transition-all duration-300 transform hover:scale-110 group border border-cyan-400 border-opacity-30">
+        {/* Floating Cart Button */}
+        <div className="fixed bottom-24 right-6 z-40">
+          <button 
+            onClick={toggleCart}
+            className="relative w-14 h-14 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-cyan-900/40 hover:shadow-cyan-900/60 transition-all duration-300 transform hover:scale-110 group border border-cyan-400 border-opacity-30"
+          >
             <FiShoppingBag className="w-6 h-6 text-white transform group-hover:scale-110 transition-transform duration-300" />
+            
+            {/* Cart Badge */}
+            {getCartItemsCount() > 0 && (
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg">
+                {getCartItemsCount()}
+              </span>
+            )}
           </button>
         </div>
       </div>

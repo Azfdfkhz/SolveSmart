@@ -14,7 +14,7 @@ import {
   FaQrCode,
   FiCopy,
   FiShoppingBag
-} from 'react-icons/fi';
+} from 'react-icons/fi/fa';
 import { FaWhatsapp, FaSpinner } from 'react-icons/fa';
 
 const Orders = () => {
@@ -28,7 +28,6 @@ const Orders = () => {
 
   const userOrders = getUserOrders();
 
-  // Reset states when modal closes
   useEffect(() => {
     if (!showPaymentModal) {
       setPaymentMethod('');
@@ -81,10 +80,8 @@ const Orders = () => {
 
     try {
       if (paymentMethod === 'qris') {
-        // Untuk QRIS, tampilkan QR code dulu
         setShowQRCode(true);
       } else {
-        // Untuk cash, langsung proses
         await processPayment(selectedOrder.id, paymentMethod);
         setShowPaymentModal(false);
         setSelectedOrder(null);
@@ -115,9 +112,7 @@ const Orders = () => {
     }).format(amount || 0);
   };
 
-  // Generate dummy QR code (dalam production, gunakan API QRIS)
   const generateQRCode = (orderId, amount) => {
-    // Ini contoh dummy QR code, dalam real app gunakan library seperti qrcode.react
     const qrData = `QRIS:ORDER-${orderId}:AMOUNT-${amount}:TIMESTAMP-${Date.now()}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
   };
@@ -128,15 +123,10 @@ const Orders = () => {
     setTimeout(() => setCopiedOrderId(''), 2000);
   };
 
-  const contactAdmin = () => {
-    const message = `Halo admin, saya ingin bertanya tentang pesanan saya. Order ID: ${selectedOrder?.id}`;
-    const whatsappUrl = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
 
   const getPaymentMethodIcon = (method) => {
     switch (method) {
-      case 'qris': return <FiQrCode className="w-4 h-4" />;
+      case 'qris': return <FaQrCode className="w-4 h-4" />;
       case 'cash': return <FiDollarSign className="w-4 h-4" />;
       default: return <FiCreditCard className="w-4 h-4" />;
     }
@@ -283,16 +273,6 @@ const Orders = () => {
                       </button>
                     )}
 
-                    {/* Contact Admin Button */}
-                    {(order.status === 'rejected' || (order.status === 'pending' && order.paymentStatus === 'unpaid')) && (
-                      <button
-                        onClick={contactAdmin}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <FaWhatsapp className="w-4 h-4" />
-                        <span>Hubungi Admin</span>
-                      </button>
-                    )}
 
                     {/* View Details */}
                     <button

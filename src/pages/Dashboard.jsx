@@ -31,7 +31,8 @@ import {
   FaTimesCircle,
   FaFileDownload,
   FaMoneyBillWave,
-  FaQrcode
+  FaQrcode,
+  FaStickyNote 
 } from 'react-icons/fa';
 import { 
   FiPackage, 
@@ -58,7 +59,7 @@ const Dashboard = () => {
     getOrderStats 
   } = useOrder();
   const { dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboard();
-  
+  const [showNoteModal, setShowNoteModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -970,14 +971,75 @@ const handleOrderAction = async () => {
                     <button
                       onClick={() => {
                         setSelectedOrder(order);
-                        setActionType('view');
-                        setShowOrderModal(true);
+                        setShowNoteModal(true);
                       }}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2"
+                      className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-cyan-500/20"
                     >
-                      <FaEye className="w-4 h-4" />
-                      <span>Lihat Detail</span>
+                      <FaStickyNote className="w-4 h-4" />
+                      <span>Lihat Catatan</span>
                     </button>
+
+                    {/* MODAL CATATAN - TAMPILAN RAPI */}
+                    {showNoteModal && selectedOrder && (
+                      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 w-full max-w-md border border-cyan-500/30 shadow-2xl relative">
+                          
+                          {/* Header dengan gradient */}
+                          <div className="flex justify-between items-center mb-6 pb-4 border-b border-cyan-500/20">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <FaStickyNote className="w-4 h-4 text-cyan-400" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-white">Catatan Pembeli</h3>
+                                <p className="text-cyan-400 text-xs">Order #{selectedOrder.id?.slice(-8)}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Container Catatan */}
+                          <div className="space-y-4">
+                            {/* Nama Pembeli */}
+                            <div>
+                              <label className="block text-cyan-300 text-sm font-medium mb-2">
+                                Nama Pembeli
+                              </label>
+                              <div className="w-full px-4 py-3 bg-slate-700/50 border border-cyan-500/20 rounded-xl text-white font-medium">
+                                {selectedOrder.shippingAddress?.fullName || "Tidak tersedia"}
+                              </div>
+                            </div>
+
+                            {/* Catatan Tambahan */}
+                            <div>
+                              <label className="block text-cyan-300 text-sm font-medium mb-2">
+                                Catatan Tambahan
+                              </label>
+                              <div className="w-full px-4 py-3 bg-slate-700/50 border border-cyan-500/20 rounded-xl min-h-[120px]">
+                                {selectedOrder.shippingAddress?.note ? (
+                                  <p className="text-white whitespace-pre-wrap leading-relaxed text-sm">
+                                    {selectedOrder.shippingAddress.note}
+                                  </p>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                    <FaStickyNote className="w-8 h-8 mb-2 opacity-50" />
+                                    <p className="text-sm italic">Tidak ada catatan tambahan</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Tombol Tutup */}
+                          <button
+                            onClick={() => setShowNoteModal(false)}
+                            className="w-full mt-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 shadow-lg shadow-cyan-500/20"
+                          >
+                            Tutup
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>

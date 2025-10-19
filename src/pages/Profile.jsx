@@ -8,9 +8,6 @@ import {
   FiAward, 
   FiBarChart2, 
   FiLogOut, 
-  FiHome, 
-  FiMessageCircle, 
-  FiUser, 
   FiChevronRight, 
   FiShield,
   FiStar,
@@ -21,6 +18,8 @@ import {
   FiDownload,
   FiDollarSign
 } from 'react-icons/fi';
+
+import Navbar from '../components/Navbar'; 
 
 const Profile = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -46,7 +45,7 @@ const Profile = () => {
     .filter(order => order.status === 'completed')
     .reduce((total, order) => total + order.totalAmount, 0);
 
-  // Menu items berdasarkan role user
+  // Menu items untuk profile page
   const menuItems = [
     {
       icon: FiShoppingBag,
@@ -159,9 +158,9 @@ const Profile = () => {
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600 rounded-full blur-3xl opacity-20"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-600 rounded-full blur-3xl opacity-20"></div>
       </div>
-
+        <Navbar />
       {/* Main Content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pt-20"> {/* pt-20 untuk memberi space untuk navbar top */}
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <button 
@@ -540,31 +539,8 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Bottom Navigation - Mobile Only */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20 lg:hidden">
-        <div className="bg-gradient-to-r from-blue-800/80 to-cyan-800/80 backdrop-blur-xl rounded-2xl px-6 py-3 border border-blue-700/30 shadow-2xl shadow-blue-900/30">
-          <div className="flex items-center space-x-8">
-            <button 
-              onClick={() => navigate('/home')} 
-              className="text-blue-300 hover:text-white transition-colors duration-300 p-2"
-            >
-              <FiHome className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => navigate('/chat')} 
-              className="text-blue-300 hover:text-white transition-colors duration-300 p-2"
-            >
-              <FiMessageCircle className="w-5 h-5" />
-            </button>
-            <button className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-2 rounded-xl shadow-lg">
-              <FiUser className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom spacing for mobile navigation */}
-      <div className="h-20 lg:h-0"></div>
+      {/* Bottom spacing untuk navbar bottom */}
+      <div className="h-24"></div>
     </div>
   );
 };

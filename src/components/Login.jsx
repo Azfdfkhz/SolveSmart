@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { FaGoogle, FaShieldAlt, FaBolt, FaCrown, FaGem, FaLightbulb } from 'react-icons/fa';
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isHovered, setIsHovered] = useState(false);
+  const [lightOn, setLightOn] = useState(true);
   
   const { loginWithGoogle } = useAuth();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLightOn(prev => !prev);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
@@ -21,111 +32,205 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Luxury Black Background with Gold Accents */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div className="absolute top-40 right-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-40 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+        {/* Subtle Gold Orbs */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 right-0 w-80 h-80 bg-yellow-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl"></div>
+        
+        {/* Gold Geometric Patterns */}
+        <div className="absolute top-10 right-10 w-32 h-32 border border-amber-500/10 rounded-lg rotate-45"></div>
+        <div className="absolute bottom-20 left-10 w-24 h-24 border border-amber-500/10 rounded-full"></div>
+        <div className="absolute top-1/2 right-1/4 w-16 h-16 border border-amber-500/10 rotate-12"></div>
+      </div>
+
+      {/* Subtle Gold Particles */}
+      <div className="absolute inset-0">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-amber-400/20 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${20 + Math.random() * 10}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Elegant Gold Stars */}
+      <div className="absolute inset-0">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className={`absolute w-1 h-1 bg-amber-300 rounded-full transition-all duration-1000 ${lightOn ? 'opacity-40' : 'opacity-10'}`}
+            style={{
+              left: `${15 + i * 15}%`,
+              top: `${20 + (i % 2) * 30}%`,
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Main Card */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
-          {/* Header with Gradient */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-center relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+        {/* Premium Black Card Container */}
+        <div className="bg-gray-900/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-amber-500/20 overflow-hidden transform transition-all duration-500">
+          
+          {/* Luxury Header */}
+          <div className="relative p-8 text-center border-b border-amber-500/20 bg-gradient-to-b from-gray-800 to-gray-900">
+            {/* Decorative Gold Elements */}
+            <div className="absolute top-4 right-4 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-amber-300 rounded-full"></div>
             
-            <div className="relative">
-              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition duration-300">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <div className="w-6 h-6 bg-white rounded-lg"></div>
+            {/* Premium Badge */}
+            <div className="absolute top-3 left-3">
+              <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 px-2 py-1 rounded-full text-xs font-medium">
+                <FaCrown className="text-xs" />
+                <span>PREMIUM</span>
+              </div>
+            </div>
+
+            {/* Diamond Decoration */}
+            <div className="absolute top-3 right-3">
+              <FaGem className="text-amber-300 text-sm" />
+            </div>
+
+            <div className="relative z-10">
+              {/* Animated Light Bulb Logo */}
+              <div className={`w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg border ${lightOn ? 'border-amber-400/30' : 'border-amber-600/20'} transition-all duration-500`}>
+                <div className="w-14 h-14 bg-gray-700/50 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <FaLightbulb className={`text-2xl transition-all duration-500 ${lightOn ? 'text-amber-300' : 'text-amber-600'} ${lightOn ? 'animate-pulse' : ''}`} />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold text-white mb-2">SolveSmart</h1>
-              <p className="text-purple-100">Solusi Cerdas untuk Bisnis Anda</p>
+              
+              <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-amber-200 to-amber-300 bg-clip-text mb-2 tracking-tight">
+                SolveSmart
+              </h1>
+              <p className="text-gray-400 text-sm font-light">
+                Smart Solutions, Complete Results
+              </p>
             </div>
           </div>
 
+          {/* Content Section */}
           <div className="p-8">
+            {/* Minimal Features Grid */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              <div className="text-center group">
+                <div className={`w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-500/10 transition-all duration-300 border ${lightOn ? 'border-amber-500/20' : 'border-gray-600'}`}>
+                  <FaShieldAlt className="text-amber-400 text-lg" />
+                </div>
+                <p className="text-gray-300 text-xs font-medium">Secure</p>
+              </div>
+              <div className="text-center group">
+                <div className={`w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-500/10 transition-all duration-300 border ${lightOn ? 'border-amber-500/20' : 'border-gray-600'}`}>
+                  <FaBolt className="text-amber-400 text-lg" />
+                </div>
+                <p className="text-gray-300 text-xs font-medium">Elite</p>
+              </div>
+              <div className="text-center group">
+                <div className={`w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-500/10 transition-all duration-300 border ${lightOn ? 'border-amber-500/20' : 'border-gray-600'}`}>
+                  <FaLightbulb className={`text-lg transition-all duration-500 ${lightOn ? 'text-amber-300' : 'text-amber-600'}`} />
+                </div>
+                <p className="text-gray-300 text-xs font-medium">Smart</p>
+              </div>
+            </div>
+
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg mb-6 animate-shake">
-                <div className="flex items-center">
-                  <span className="iconify text-xl mr-2" data-icon="mdi:alert-circle"></span>
-                  <span className="text-sm">{error}</span>
+              <div className="bg-amber-900/20 border border-amber-500/30 text-amber-200 px-4 py-3 rounded-lg mb-6 text-sm text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                  <span className="text-xs">{error}</span>
                 </div>
               </div>
             )}
 
-            {/* Google Login Button */}
-            <button
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              className="w-full bg-white border-2 border-gray-200 text-gray-700 py-5 px-6 rounded-xl font-semibold flex items-center justify-center space-x-3 hover:border-indigo-400 hover:shadow-xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed group transform hover:scale-[1.02]"
+            {/* Elegant Google Login Button - MORE GOLD */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
             >
-              {loading ? (
-                <>
-                  <div className="w-6 h-6 border-3 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
-                  <span>Sedang masuk...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  <span className="group-hover:text-indigo-600 transition text-lg">
-                    Masuk dengan Google
-                  </span>
-                </>
-              )}
-            </button>
+              {/* Gold Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-sm"></div>
+              
+              {/* Main Button - Enhanced Gold */}
+              <button
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="relative w-full bg-gradient-to-r from-amber-900/30 to-amber-800/30 border border-amber-500/40 text-amber-100 py-4 px-6 rounded-xl font-medium flex items-center justify-center gap-3 transition-all duration-300 hover:border-amber-400/60 hover:bg-gradient-to-r hover:from-amber-800/40 hover:to-amber-700/40 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group overflow-hidden shadow-lg"
+              >
+                {/* Gold Shimmer Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                
+                {/* Loading State */}
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-amber-400/50 border-t-amber-300 rounded-full animate-spin"></div>
+                    <span className="text-sm bg-gradient-to-r from-amber-200 to-amber-300 bg-clip-text text-transparent font-semibold">
+                      Accessing Premium...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="relative">
+                      <FaGoogle className="text-lg text-amber-300 transition-transform duration-300 group-hover:scale-110 group-hover:text-amber-200" />
+                      {/* Gold Icon Glow */}
+                      <div className="absolute inset-0 bg-amber-400/30 rounded-full blur-sm scale-125 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </div>
+                    <span className="text-sm bg-gradient-to-r from-amber-200 to-amber-300 bg-clip-text text-transparent font-semibold">
+                      Continue with Google
+                    </span>
+                    {/* Gold Arrow Indicator */}
+                    <div className={`transform transition-all duration-300 ${isHovered ? 'translate-x-1 opacity-100' : 'opacity-0'}`}>
+                      <div className="w-1.5 h-1.5 bg-amber-300 rounded-full"></div>
+                    </div>
+                  </>
+                )}
+              </button>
 
-            {/* Info Text */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-500">
-                Gunakan akun Google Anda untuk masuk dengan aman
-              </p>
+              {/* Gold Corner Accents */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 border-t border-r border-amber-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b border-l border-amber-400/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
 
-            {/* Benefits */}
-            <div className="mt-8 space-y-3">
-              <div className="flex items-center space-x-3 text-gray-600">
-                <span className="iconify text-green-500 text-xl" data-icon="mdi:check-circle"></span>
-                <span className="text-sm">Login cepat dan mudah</span>
-              </div>
-              <div className="flex items-center space-x-3 text-gray-600">
-                <span className="iconify text-green-500 text-xl" data-icon="mdi:check-circle"></span>
-                <span className="text-sm">Keamanan terjamin oleh Google</span>
-              </div>
-              <div className="flex items-center space-x-3 text-gray-600">
-                <span className="iconify text-green-500 text-xl" data-icon="mdi:check-circle"></span>
-                <span className="text-sm">Tidak perlu mengingat password</span>
+            {/* Security Assurance */}
+            <div className="text-center mt-6 pt-4 border-t border-gray-700">
+              <div className="flex items-center justify-center gap-2 text-amber-500/70 text-xs">
+                <FaShieldAlt className="text-amber-400 text-xs" />
+                <span>Enterprise Grade Security</span>
               </div>
             </div>
 
-            {/* Debug Info */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-              <p className="text-xs text-gray-600 text-center">
-                ~~~~~~
+            {/* Footer Text */}
+            <div className="text-center mt-4">
+              <p className="text-gray-500 text-xs">
+                By continuing, you agree to our{' '}
+                <span className="text-amber-400 hover:text-amber-300 cursor-pointer transition-colors duration-200">
+                  Terms
+                </span>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Info */}
-        <div className="mt-6 text-center text-white/80 text-sm">
-          <p>🔒 Login aman dengan enkripsi end-to-end</p>
+        {/* Status Indicator */}
+        <div className="text-center mt-6">
+          <div className="inline-flex items-center gap-2 bg-gray-900/50 border border-amber-500/20 rounded-full px-4 py-2">
+            <div className="flex gap-1">
+              <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${lightOn ? 'bg-amber-400' : 'bg-amber-600'}`}></div>
+            </div>
+            <span className="text-gray-400 text-xs">
+              Status: <span className="text-amber-400">Ready</span>
+            </span>
+          </div>
         </div>
       </div>
-
-      {/* Iconify Script */}
-      <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-
 
     </div>
   );

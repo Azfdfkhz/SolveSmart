@@ -1,10 +1,11 @@
-// App.jsx (Updated)
+// App.jsx (Updated with CartProvider)
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProductProvider } from './context/ProductContext';
 import { OrderProvider } from './context/OrderContext';
 import { DashboardProvider } from './context/DashboardContext';
+import { CartProvider } from './context/CartContext'; // Import CartProvider
 import Login from './components/Login';
 
 // Lazy loading components
@@ -19,10 +20,10 @@ const Orders = lazy(() => import('./pages/Orders'));
 
 // Loading Component
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
     <div className="text-center">
-      <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-gray-600 font-medium">Memuat...</p>
+      <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-blue-200 font-medium">Memuat...</p>
     </div>
   </div>
 );
@@ -77,101 +78,103 @@ function App() {
       <ProductProvider>
         <OrderProvider>
           <DashboardProvider>
-            <div className="App">
-              <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route 
-                    path="/login" 
-                    element={
-                      <PublicRoute>
-                        <Login />
-                      </PublicRoute>
-                    } 
-                  />
-                  
-                  {/* Protected Routes */}
-                  <Route 
-                    path="/home" 
-                    element={
-                      <ProtectedRoute>
-                        <Home />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/chat" 
-                    element={
-                      <ProtectedRoute>
-                        <Chat />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/profile" 
-                    element={
-                      <ProtectedRoute>
-                        <Profile />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/products" 
-                    element={
-                      <ProtectedRoute>
-                        <Products />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/product/:id" 
-                    element={
-                      <ProtectedRoute>
-                        <ProductDetail />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/orders" 
-                    element={
-                      <ProtectedRoute>
-                        <Orders />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  
-                  {/* Admin Only Routes */}
-                  <Route 
-                    path="/dashboard" 
-                    element={
-                      <ProtectedRoute requireAdmin={true}>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/admin/products" 
-                    element={
-                      <ProtectedRoute requireAdmin={true}>
-                        <Products adminView={true} />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/admin/chat-monitor" 
-                    element={
-                      <ProtectedRoute requireAdmin={true}>
-                        <AdminChatMonitor />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  
-                  {/* Default Routes */}
-                  <Route path="/" element={<Navigate to="/home" replace />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </div>
+            <CartProvider> {/* Tambahkan CartProvider di sini */}
+              <div className="App">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route 
+                      path="/login" 
+                      element={
+                        <PublicRoute>
+                          <Login />
+                        </PublicRoute>
+                      } 
+                    />
+                    
+                    {/* Protected Routes */}
+                    <Route 
+                      path="/home" 
+                      element={
+                        <ProtectedRoute>
+                          <Home />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/chat" 
+                      element={
+                        <ProtectedRoute>
+                          <Chat />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/profile" 
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/products" 
+                      element={
+                        <ProtectedRoute>
+                          <Products />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/product/:id" 
+                      element={
+                        <ProtectedRoute>
+                          <ProductDetail />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/orders" 
+                      element={
+                        <ProtectedRoute>
+                          <Orders />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    {/* Admin Only Routes */}
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoute requireAdmin={true}>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/products" 
+                      element={
+                        <ProtectedRoute requireAdmin={true}>
+                          <Products adminView={true} />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/chat-monitor" 
+                      element={
+                        <ProtectedRoute requireAdmin={true}>
+                          <AdminChatMonitor />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    {/* Default Routes */}
+                    <Route path="/" element={<Navigate to="/home" replace />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </div>
+            </CartProvider>
           </DashboardProvider>
         </OrderProvider>
       </ProductProvider>

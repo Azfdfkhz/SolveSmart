@@ -94,7 +94,7 @@ export const DashboardProvider = ({ children }) => {
         totalCustomers: usersSnapshot.size,
         totalOrders: ordersSnapshot.size,
         recentOrders,
-        salesData: [] // Tetap kosong untuk sekarang
+        salesData: [] 
       });
 
       console.log('✅ Dashboard data updated successfully');
@@ -119,7 +119,6 @@ export const DashboardProvider = ({ children }) => {
       try {
         await loadDashboardData();
 
-        // Real-time listeners
         unsubscribeOrders = onSnapshot(
           query(collection(db, 'orders'), orderBy('createdAt', 'desc')),
           () => loadDashboardData(),
