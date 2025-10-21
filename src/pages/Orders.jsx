@@ -10,7 +10,6 @@ import {
   FiDownload,
   FiDollarSign,
   FiCreditCard,
-  FiQrCode,
   FiCopy,
   FiShoppingBag
 } from 'react-icons/fi';
