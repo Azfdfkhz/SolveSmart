@@ -1,4 +1,4 @@
-// pages/Products.jsx (Fixed Version)
+// pages/Products.jsx (MULTIPLE IMAGES VERSION)
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +15,7 @@ const Products = () => {
   
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
   
@@ -24,15 +24,8 @@ const Products = () => {
     subtitle: '',
     price: '',
     category: '',
-    image: null
+    images: []
   });
-
-  // Handle image error dengan fallback yang lebih baik
-  const handleImageError = (e) => {
-    console.error('Error loading image:', e.target.src);
-    e.target.src = 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=No+Image';
-    e.target.onerror = null; // Prevent infinite loop
-  };
 
   // Handle edit product
   const handleEditProduct = (product) => {
@@ -42,9 +35,9 @@ const Products = () => {
       subtitle: product.subtitle,
       price: product.price.toString(),
       category: product.category,
-      image: product.image
+      images: product.images || [product.image].filter(Boolean) // Support both single and multiple images
     });
-    setImagePreview(product.image);
+    setImagePreviews(product.images || [product.image].filter(Boolean));
     setShowModal(true);
   };
 
@@ -56,112 +49,211 @@ const Products = () => {
       subtitle: '',
       price: '',
       category: '',
-      image: null
+      images: []
     });
-    setImagePreview(null);
+    setImagePreviews([]);
     setShowModal(true);
   };
 
-  // Handle file selection
+  // Handle file selection - MULTIPLE IMAGES
   const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-    if (file.size > 1 * 1024 * 1024) {
-      alert('File maksimal 1MB untuk upload cepat');
-      return;
-    }
+    // Validasi files
+    const validFiles = files.filter(file => {
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`File ${file.name} terlalu besar (max 2MB)`);
+        return false;
+      }
 
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-      alert('Hanya format JPEG, JPG, PNG yang didukung');
-      return;
-    }
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        alert(`File ${file.name} harus format JPEG, JPG, PNG, atau WebP`);
+        return false;
+      }
 
-    const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
-    reader.readAsDataURL(file);
+      return true;
+    });
 
-    setProductForm({...productForm, image: file});
+    if (validFiles.length === 0) return;
+
+    // Create previews untuk semua files
+    const newPreviews = [];
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        newPreviews.push(e.target.result);
+        if (newPreviews.length === validFiles.length) {
+          setImagePreviews(prev => [...prev, ...newPreviews]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Store file objects for upload
+    setProductForm(prev => ({
+      ...prev,
+      images: [...prev.images, ...validFiles]
+    }));
   };
 
-  // Handle form submit (add or edit)
+  const uploadImageToFirebase = async (file) => {
+    try {
+      console.log('📤 Starting image upload...', file.name);
+      
+      const timestamp = Date.now();
+      const fileName = `product_${timestamp}_${file.name}`;
+      const storageRef = ref(storage, `products/${fileName}`);
+      
+      console.log('🔄 Uploading to:', `products/${fileName}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log('✅ Upload successful:', snapshot);
+      
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('🌐 Download URL:', downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('❌ Upload failed:', error);
+      throw new Error(`Gagal upload gambar: ${error.message}`);
+    }
+  };
+
+  const removeImage = (index) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setProductForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!productForm.image && !imagePreview) {
-      alert('Pilih gambar produk terlebih dahulu');
+    
+    if (!productForm.title.trim()) {
+      alert('Judul produk harus diisi');
+      return;
+    }
+
+    if (!productForm.price || Number(productForm.price) <= 0) {
+      alert('Harga produk harus lebih dari 0');
+      return;
+    }
+
+    if (productForm.images.length === 0 && !editingProduct) {
+      alert('Pilih minimal 1 gambar produk');
       return;
     }
 
     setUploading(true);
+    
     try {
-      let imageUrl = productForm.image;
+      let imageUrls = [];
 
-      // Upload ke Firebase Storage jika image baru berupa File
-      if (productForm.image instanceof File) {
-        const storageRef = ref(storage, `products/${Date.now()}-${productForm.image.name}`);
-        const snapshot = await uploadBytes(storageRef, productForm.image);
-        imageUrl = await getDownloadURL(snapshot.ref);
-        console.log('Image uploaded to:', imageUrl);
+      console.log('🛠️ Processing product data...');
+      console.log('Images to process:', productForm.images);
+
+      const filesToUpload = productForm.images.filter(img => img instanceof File);
+      if (filesToUpload.length > 0) {
+        console.log('🖼️ Uploading new images...');
+        for (const file of filesToUpload) {
+          const imageUrl = await uploadImageToFirebase(file);
+          imageUrls.push(imageUrl);
+        }
+        console.log('✅ New images uploaded:', imageUrls);
       }
+
+      const existingUrls = productForm.images.filter(img => typeof img === 'string');
+      imageUrls = [...imageUrls, ...existingUrls];
+
+      if (imageUrls.length === 0 && editingProduct) {
+        imageUrls = editingProduct.images || [editingProduct.image].filter(Boolean);
+      }
+
+      console.log('🎯 Final image URLs:', imageUrls);
 
       const productData = {
         title: productForm.title.trim(),
         subtitle: productForm.subtitle.trim(),
         price: Number(productForm.price),
-        category: productForm.category.trim(),
-        image: imageUrl,
+        category: productForm.category.trim() || 'Uncategorized',
+        images: imageUrls, 
+        image: imageUrls[0] ||'', 
         status: 'Active',
-        stock: 999, // Default stock
+        stock: 999,
         createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
 
+      console.log('💾 Saving product data:', productData);
+
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
-        alert('Produk berhasil diupdate!');
+        alert('✅ Produk berhasil diupdate!');
       } else {
         await addProduct(productData);
-        alert('Produk berhasil ditambahkan!');
+        alert('✅ Produk berhasil ditambahkan!');
       }
 
+      // Reset form
       setProductForm({
         title: '',
         subtitle: '',
         price: '',
         category: '',
-        image: null
+        images: []
       });
-      setImagePreview(null);
+      setImagePreviews([]);
       setShowModal(false);
       setEditingProduct(null);
 
+      // Refresh products list
+      refreshProducts();
+
     } catch (error) {
-      console.error('Error saving product:', error);
-      alert(error.message || 'Gagal menyimpan produk');
+      console.error('❌ Error saving product:', error);
+      alert(error.message || 'Gagal menyimpan produk. Coba lagi.');
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (window.confirm('Hapus produk ini?')) {
+    if (window.confirm('Yakin hapus produk ini?')) {
       try {
         await deleteProduct(productId);
+        alert('✅ Produk berhasil dihapus!');
       } catch (error) {
-        alert('Gagal menghapus produk');
+        alert('❌ Gagal menghapus produk');
       }
     }
   };
 
-  const removeImage = () => {
-    setImagePreview(null);
-    setProductForm({...productForm, image: null});
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  // Enhanced image error handler
+  const handleImageError = (e, product) => {
+    console.error('❌ Image failed to load:', {
+      productId: product?.id,
+      productTitle: product?.title, 
+      imageUrl: product?.image
+    });
+    
+    e.target.src = 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=Image+Not+Found';
+    e.target.alt = `Gambar tidak tersedia - ${product?.title || 'Product'}`;
+    e.target.onerror = null;
   };
 
-  // Debug: Log products untuk memeriksa data
-  console.log('Products data:', products);
+  // Debug: Log products untuk inspeksi
+  console.log('📦 Products data:', products);
+  console.log('🖼️ Product images check:', products.map(p => ({
+    id: p.id,
+    title: p.title,
+    hasImage: !!p.image,
+    hasImages: !!(p.images && p.images.length > 0),
+    imageType: typeof p.image,
+    imageUrl: p.image,
+    imagesCount: p.images ? p.images.length : 0
+  })));
 
   // Skeleton loader
   const ProductSkeleton = () => (
@@ -271,11 +363,12 @@ const Products = () => {
                 className="group bg-gradient-to-br from-slate-800/40 to-blue-900/30 backdrop-blur-xl rounded-2xl p-4 border border-blue-700/30 hover:border-cyan-500/40 transition-all duration-500 shadow-xl shadow-blue-900/10 hover:shadow-2xl hover:shadow-cyan-900/20 transform hover:-translate-y-2"
               >
                 <div className="relative overflow-hidden rounded-xl mb-4">
+                  {/* GUNAKAN SINGLE IMAGE (image) untuk Home compatibility */}
                   <img
                     src={product.image}
                     alt={product.title}
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={handleImageError}
+                    onError={(e) => handleImageError(e, product)}
                     loading="lazy"
                   />
                   <div className="absolute top-3 right-3">
@@ -289,6 +382,15 @@ const Products = () => {
                       {product.category}
                     </div>
                   </div>
+                  
+                  {/* Multiple Images Badge */}
+                  {product.images && product.images.length > 1 && (
+                    <div className="absolute bottom-3 right-3">
+                      <div className="bg-blue-600/80 text-white px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                        +{product.images.length - 1} more
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -337,10 +439,10 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Add/Edit Product Modal */}
+      {/* Add/Edit Product Modal - MULTIPLE IMAGES */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-md border border-blue-700/30 shadow-2xl">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-2xl border border-blue-700/30 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white">
@@ -355,47 +457,72 @@ const Products = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Image Upload */}
+                {/* Multiple Images Upload */}
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-white">Product Image</label>
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-xl border-2 border-dashed border-cyan-500/30"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                      >
-                        <FiX className="w-4 h-4" />
-                      </button>
+                  <label className="block text-sm font-medium text-white">
+                    Product Images {!editingProduct && '*'}
+                    <span className="text-blue-400 text-xs ml-2">(Max 5 images, 2MB each)</span>
+                  </label>
+                  
+                  {imagePreviews.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border-2 border-cyan-500/30"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <FiX className="w-3 h-3" />
+                          </button>
+                          <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {imagePreviews.length < 5 && (
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="border-2 border-dashed border-blue-600/30 rounded-lg p-4 text-center cursor-pointer hover:border-cyan-500/50 transition-colors bg-blue-800/20 h-32 flex flex-col items-center justify-center"
+                        >
+                          <FiUpload className="w-6 h-6 text-blue-400 mb-2" />
+                          <p className="text-blue-300 text-xs">Add More</p>
+                          <p className="text-blue-400 text-xs mt-1">{5 - imagePreviews.length} left</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-blue-600/30 rounded-xl p-8 text-center cursor-pointer hover:border-cyan-500/50 transition-colors"
+                      className="border-2 border-dashed border-blue-600/30 rounded-xl p-8 text-center cursor-pointer hover:border-cyan-500/50 transition-colors bg-blue-800/20"
                     >
                       <FiUpload className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                      <p className="text-blue-300 text-sm">Click to upload product image</p>
-                      <p className="text-blue-400 text-xs mt-1">JPEG, PNG (Max 1MB)</p>
+                      <p className="text-blue-300 text-sm">Click to upload product images</p>
+                      <p className="text-blue-400 text-xs mt-1">JPEG, PNG, WebP (Max 2MB per image)</p>
+                      <p className="text-cyan-400 text-xs mt-1">Max 5 images</p>
                     </div>
                   )}
+                  
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileSelect}
-                    accept="image/jpeg,image/jpg,image/png"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
                     className="hidden"
+                    multiple
                   />
                 </div>
 
                 {/* Form Fields */}
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-white mb-1">Title</label>
+                    <label className="block text-sm font-medium text-white mb-1">Title *</label>
                     <input
                       type="text"
                       required
@@ -410,21 +537,20 @@ const Products = () => {
                     <label className="block text-sm font-medium text-white mb-1">Subtitle</label>
                     <input
                       type="text"
-                      required
                       value={productForm.subtitle}
                       onChange={(e) => setProductForm({...productForm, subtitle: e.target.value})}
                       className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                      placeholder="Product subtitle"
+                      placeholder="Product description"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-white mb-1">Price</label>
+                      <label className="block text-sm font-medium text-white mb-1">Price *</label>
                       <input
                         type="number"
                         required
-                        min="0"
+                        min="1"
                         value={productForm.price}
                         onChange={(e) => setProductForm({...productForm, price: e.target.value})}
                         className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
@@ -436,7 +562,6 @@ const Products = () => {
                       <label className="block text-sm font-medium text-white mb-1">Category</label>
                       <input
                         type="text"
-                        required
                         value={productForm.category}
                         onChange={(e) => setProductForm({...productForm, category: e.target.value})}
                         className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
@@ -450,7 +575,8 @@ const Products = () => {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 bg-slate-700 text-white py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors"
+                    disabled={uploading}
+                    className="flex-1 bg-slate-700 text-white py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors disabled:opacity-50"
                   >
                     Cancel
                   </button>
