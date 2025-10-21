@@ -1,4 +1,4 @@
-// pages/Products.jsx (Firebase Storage Full Version)
+// pages/Products.jsx (Fixed Version)
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +26,13 @@ const Products = () => {
     category: '',
     image: null
   });
+
+  // Handle image error dengan fallback yang lebih baik
+  const handleImageError = (e) => {
+    console.error('Error loading image:', e.target.src);
+    e.target.src = 'https://via.placeholder.com/300x200/1e3a8a/ffffff?text=No+Image';
+    e.target.onerror = null; // Prevent infinite loop
+  };
 
   // Handle edit product
   const handleEditProduct = (product) => {
@@ -93,21 +100,28 @@ const Products = () => {
       // Upload ke Firebase Storage jika image baru berupa File
       if (productForm.image instanceof File) {
         const storageRef = ref(storage, `products/${Date.now()}-${productForm.image.name}`);
-        await uploadBytes(storageRef, productForm.image);
-        imageUrl = await getDownloadURL(storageRef);
+        const snapshot = await uploadBytes(storageRef, productForm.image);
+        imageUrl = await getDownloadURL(snapshot.ref);
+        console.log('Image uploaded to:', imageUrl);
       }
 
+      const productData = {
+        title: productForm.title.trim(),
+        subtitle: productForm.subtitle.trim(),
+        price: Number(productForm.price),
+        category: productForm.category.trim(),
+        image: imageUrl,
+        status: 'Active',
+        stock: 999, // Default stock
+        createdAt: editingProduct ? editingProduct.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
       if (editingProduct) {
-        await updateProduct(editingProduct.id, {
-          ...productForm,
-          image: imageUrl
-        });
+        await updateProduct(editingProduct.id, productData);
         alert('Produk berhasil diupdate!');
       } else {
-        await addProduct({
-          ...productForm,
-          image: imageUrl
-        });
+        await addProduct(productData);
         alert('Produk berhasil ditambahkan!');
       }
 
@@ -123,6 +137,7 @@ const Products = () => {
       setEditingProduct(null);
 
     } catch (error) {
+      console.error('Error saving product:', error);
       alert(error.message || 'Gagal menyimpan produk');
     } finally {
       setUploading(false);
@@ -144,6 +159,9 @@ const Products = () => {
     setProductForm({...productForm, image: null});
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  // Debug: Log products untuk memeriksa data
+  console.log('Products data:', products);
 
   // Skeleton loader
   const ProductSkeleton = () => (
@@ -257,7 +275,8 @@ const Products = () => {
                     src={product.image}
                     alt={product.title}
                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => e.target.src='/default-product.png'}
+                    onError={handleImageError}
+                    loading="lazy"
                   />
                   <div className="absolute top-3 right-3">
                     <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
@@ -303,7 +322,10 @@ const Products = () => {
                         </button>
                       </div>
                     ) : (
-                      <button className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 text-sm font-medium shadow-lg">
+                      <button 
+                        onClick={() => navigate(`/product/${product.id}`)}
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 text-sm font-medium shadow-lg"
+                      >
                         View Details
                       </button>
                     )}
@@ -315,8 +337,146 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Modal & Floating Add Button tetap sama seperti Luxury Version */}
+      {/* Add/Edit Product Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-md border border-blue-700/30 shadow-2xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">
+                  {editingProduct ? 'Edit Product' : 'Add New Product'}
+                </h3>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="p-2 hover:bg-white/10 rounded-xl transition-colors text-gray-400 hover:text-white"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
 
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Image Upload */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-white">Product Image</label>
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-xl border-2 border-dashed border-cyan-500/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <FiX className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-blue-600/30 rounded-xl p-8 text-center cursor-pointer hover:border-cyan-500/50 transition-colors"
+                    >
+                      <FiUpload className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                      <p className="text-blue-300 text-sm">Click to upload product image</p>
+                      <p className="text-blue-400 text-xs mt-1">JPEG, PNG (Max 1MB)</p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/jpeg,image/jpg,image/png"
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Form Fields */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={productForm.title}
+                      onChange={(e) => setProductForm({...productForm, title: e.target.value})}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      placeholder="Product title"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      required
+                      value={productForm.subtitle}
+                      onChange={(e) => setProductForm({...productForm, subtitle: e.target.value})}
+                      className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      placeholder="Product subtitle"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">Price</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={productForm.price}
+                        onChange={(e) => setProductForm({...productForm, price: e.target.value})}
+                        className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">Category</label>
+                      <input
+                        type="text"
+                        required
+                        value={productForm.category}
+                        onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                        className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                        placeholder="Category"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 bg-slate-700 text-white py-3 rounded-xl font-semibold hover:bg-slate-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                  >
+                    {uploading ? (
+                      <>
+                        <FaSpinner className="w-4 h-4 animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiSave className="w-4 h-4" />
+                        <span>{editingProduct ? 'Update' : 'Create'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
