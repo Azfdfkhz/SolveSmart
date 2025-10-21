@@ -1,4 +1,3 @@
-// context/ProductContext.jsx (Fixed for Multiple Images & Edit)
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   collection,
@@ -93,6 +92,17 @@ export const ProductProvider = ({ children }) => {
     return [getDefaultImage()]; // Default fallback
   };
 
+  // Function untuk mendapatkan single image (untuk Home page)
+  const getProductImage = (productData) => {
+    // Priority: image field -> first image from images array -> default
+    if (productData.image) {
+      return convertDriveLink(productData.image);
+    } else if (productData.images && Array.isArray(productData.images) && productData.images.length > 0) {
+      return convertDriveLink(productData.images[0]); // Use first image
+    }
+    return getDefaultImage();
+  };
+
   // Function untuk cache busting
   const getImageWithCacheBust = (url) => {
     if (!url) return '';
@@ -164,11 +174,17 @@ export const ProductProvider = ({ children }) => {
           console.log('📦 Products data received:', snapshot.docs.length, 'products');
           const productsData = snapshot.docs.map(doc => {
             const productData = doc.data();
+            
+            // DAPATKAN BOTH images ARRAY DAN image SINGLE
+            const imagesArray = getProductImages(productData);
+            const singleImage = getProductImage(productData);
+            
             return {
               id: doc.id,
               ...productData,
-              // Gunakan helper function untuk handle images
-              images: getProductImages(productData)
+              // Simpan both untuk compatibility
+              images: imagesArray,
+              image: singleImage // ← INI YANG DIBUTUHKAN HOME PAGE
             };
           });
           setProducts(productsData);
@@ -288,7 +304,9 @@ export const ProductProvider = ({ children }) => {
         subtitle: productData.subtitle?.trim() || '',
         price: parseFloat(productData.price),
         category: productData.category.trim(),
-        images: imageUrls, // Gunakan array images
+        // SIMPAN BOTH images ARRAY DAN image SINGLE
+        images: imageUrls, // Untuk multiple images
+        image: imageUrls[0], // ← INI YANG DIBUTUHKAN HOME PAGE (gambar pertama)
         stock: productData.stock || 10,
         status: 'Active',
         createdBy: user.uid,
@@ -354,7 +372,9 @@ export const ProductProvider = ({ children }) => {
         subtitle: productData.subtitle?.trim() || '',
         price: productData.price ? parseFloat(productData.price) : 0,
         category: productData.category?.trim() || '',
-        images: imageUrls, // Gunakan array images
+        // SIMPAN BOTH images ARRAY DAN image SINGLE
+        images: imageUrls, 
+        image: imageUrls[0], // ← INI YANG DIBUTUHKAN HOME PAGE
         stock: productData.stock || 10,
         status: productData.status || 'Active',
         updatedBy: user.uid,
@@ -413,6 +433,7 @@ export const ProductProvider = ({ children }) => {
     getDefaultImage,
     convertDriveLink,
     getProductImages, 
+    getProductImage, 
     getImageWithCacheBust,
     addToCart,
     removeFromCart,
