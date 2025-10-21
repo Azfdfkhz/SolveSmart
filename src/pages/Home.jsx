@@ -14,11 +14,22 @@ const Home = () => {
   const { getCartItemsCount, toggleCart } = useCart();
   const navigate = useNavigate();
 
+  // Debug: Log products data untuk inspeksi
+  console.log('📦 Products data in Home:', products);
+  console.log('🖼️ Product images:', products.map(p => ({ 
+    id: p.id, 
+    title: p.title, 
+    image: p.image,
+    hasImage: !!p.image 
+  })));
+
   const activeProducts = useMemo(() => {
-    return products.filter(product => 
+    const filtered = products.filter(product => 
       product.status !== 'Inactive' && 
       (product.stock === undefined || product.stock > 0)
     );
+    console.log('✅ Active products:', filtered.length);
+    return filtered;
   }, [products]);
 
   const tabs = useMemo(() => {
@@ -55,10 +66,30 @@ const Home = () => {
     navigate(`/product/${productId}`);
   };
 
-  // Fallback image handler
-  const handleImageError = (e) => {
-    e.target.src = 'https://via.placeholder.com/150/1e3a8a/ffffff?text=No+Image';
+  // Enhanced fallback image handler dengan debugging
+  const handleImageError = (e, product) => {
+    console.error('❌ Image failed to load:', {
+      productId: product?.id,
+      productTitle: product?.title,
+      imageUrl: e.target.src,
+      attemptedUrl: product?.image
+    });
+    
+    e.target.src = 'https://via.placeholder.com/200x200/1e3a8a/ffffff?text=No+Image';
+    e.target.alt = `Gambar tidak tersedia - ${product?.title || 'Product'}`;
     e.target.onerror = null; // Prevent infinite loop
+    
+    // Tambahkan styling untuk fallback image
+    e.target.className = e.target.className + ' bg-blue-800/20';
+  };
+
+  // Improved image loading handler
+  const handleImageLoad = (e, product) => {
+    console.log('✅ Image loaded successfully:', {
+      productId: product?.id,
+      productTitle: product?.title,
+      imageUrl: e.target.src
+    });
   };
 
   if (loading) {
@@ -271,89 +302,99 @@ const Home = () => {
               </div>
             </div>
           ) : (
-            filteredProducts.map((product) => (
-              <div 
-                key={product.id}
-                className="group bg-gradient-to-br from-blue-800/30 to-blue-900/20 rounded-2xl sm:rounded-3xl p-3 sm:p-4 cursor-pointer hover:from-blue-700/40 hover:to-blue-800/30 transition-all duration-500 border border-blue-700 border-opacity-20 hover:border-cyan-500 hover:border-opacity-30 backdrop-blur-sm hover:shadow-2xl hover:shadow-blue-900/20 transform hover:-translate-y-0.5 sm:hover:-translate-y-1"
-                onClick={() => handleProductClick(product.id)}
-              >
-                <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
-                  {/* Product Image */}
-                  <div className="relative flex-shrink-0">
-                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-blue-600 border-opacity-20 group-hover:border-cyan-500 group-hover:border-opacity-50 transition-all duration-300">
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        onError={handleImageError}
-                        loading="lazy"
-                      />
-                    </div>
-                    
-                    {/* Stock Badge */}
-                    {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
-                      <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-white text-xs font-bold">{product.stock}</span>
+            filteredProducts.map((product) => {
+              console.log('🎯 Rendering product:', { 
+                id: product.id, 
+                title: product.title, 
+                image: product.image,
+                hasValidImage: product.image && product.image.startsWith('http')
+              });
+              
+              return (
+                <div 
+                  key={product.id}
+                  className="group bg-gradient-to-br from-blue-800/30 to-blue-900/20 rounded-2xl sm:rounded-3xl p-3 sm:p-4 cursor-pointer hover:from-blue-700/40 hover:to-blue-800/30 transition-all duration-500 border border-blue-700 border-opacity-20 hover:border-cyan-500 hover:border-opacity-30 backdrop-blur-sm hover:shadow-2xl hover:shadow-blue-900/20 transform hover:-translate-y-0.5 sm:hover:-translate-y-1"
+                  onClick={() => handleProductClick(product.id)}
+                >
+                  <div className="flex items-start sm:items-center space-x-3 sm:space-x-4">
+                    {/* Product Image */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-blue-600 border-opacity-20 group-hover:border-cyan-500 group-hover:border-opacity-50 transition-all duration-300 bg-blue-800/20">
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={(e) => handleImageError(e, product)}
+                          onLoad={(e) => handleImageLoad(e, product)}
+                          loading="lazy"
+                        />
                       </div>
-                    )}
-                  </div>
+                      
+                      {/* Stock Badge */}
+                      {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
+                        <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-white text-xs font-bold">{product.stock}</span>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Product Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 space-y-1 sm:space-y-0">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
-                          <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-cyan-100 transition-colors duration-300 truncate">
-                            {product.title}
-                          </h3>
-                          {product.category && (
-                            <span className="bg-cyan-500/20 text-cyan-400 text-xs px-2 py-1 rounded-full border border-cyan-400/30 self-start sm:self-auto">
-                              {product.category}
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 space-y-1 sm:space-y-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                            <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-cyan-100 transition-colors duration-300 truncate">
+                              {product.title}
+                            </h3>
+                            {product.category && (
+                              <span className="bg-cyan-500/20 text-cyan-400 text-xs px-2 py-1 rounded-full border border-cyan-400/30 self-start sm:self-auto">
+                                {product.category}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-blue-300 text-xs sm:text-sm mt-1 line-clamp-2">
+                            {product.subtitle}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-cyan-400 font-bold text-base sm:text-lg">
+                            Rp {product.price?.toLocaleString()}
+                          </span>
+                          {product.originalPrice && (
+                            <span className="text-blue-400 text-xs sm:text-sm line-through">
+                              Rp {product.originalPrice.toLocaleString()}
+                            </span>
+                          )}
+                          
+                          {/* Stock Info */}
+                          {product.stock !== undefined && (
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              product.stock > 10 
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                : product.stock > 5
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            }`}>
+                              {product.stock > 10 ? 'Stock Ready' : 
+                              product.stock > 5 ? `${product.stock} lagi` : 
+                              `Only ${product.stock} lagi`}
                             </span>
                           )}
                         </div>
-                        <p className="text-blue-300 text-xs sm:text-sm mt-1 line-clamp-2">
-                          {product.subtitle}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-cyan-400 font-bold text-base sm:text-lg">
-                          Rp {product.price?.toLocaleString()}
-                        </span>
-                        {product.originalPrice && (
-                          <span className="text-blue-400 text-xs sm:text-sm line-through">
-                            Rp {product.originalPrice.toLocaleString()}
-                          </span>
-                        )}
                         
-                        {/* Stock Info */}
-                        {product.stock !== undefined && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            product.stock > 10 
-                              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                              : product.stock > 5
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                              : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          }`}>
-                            {product.stock > 10 ? 'Stock Ready' : 
-                             product.stock > 5 ? `${product.stock} lagi` : 
-                             `Only ${product.stock} lagi`}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* HANYA TOMBOL DETAIL (CHEVRON) SAJA */}
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:from-cyan-500 group-hover:to-blue-500 transition-all duration-300 shadow-lg shadow-blue-900/30 group-hover:shadow-cyan-900/40 self-end sm:self-auto">
-                        <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white transform group-hover:translate-x-0.5 transition-transform duration-300" />
+                        {/* HANYA TOMBOL DETAIL (CHEVRON) SAJA */}
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg sm:rounded-xl flex items-center justify-center group-hover:from-cyan-500 group-hover:to-blue-500 transition-all duration-300 shadow-lg shadow-blue-900/30 group-hover:shadow-cyan-900/40 self-end sm:self-auto">
+                          <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white transform group-hover:translate-x-0.5 transition-transform duration-300" />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
