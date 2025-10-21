@@ -28,7 +28,6 @@ const AdminChatMonitor = () => {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Redirect non-admin
   useEffect(() => {
     if (!user) {
       navigate("/login");
@@ -40,7 +39,6 @@ const AdminChatMonitor = () => {
     }
   }, [isAdmin, navigate, user]);
 
-  // 🔥 FIXED: Load customers dengan approach yang lebih simple
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -52,7 +50,6 @@ const AdminChatMonitor = () => {
 
     const loadCustomers = async () => {
       try {
-        // Strategy 1: Coba query dengan type filter
         const q = query(
           collection(db, "messages"),
           where("type", "==", "customer_message"),
@@ -68,7 +65,6 @@ const AdminChatMonitor = () => {
             
             snapshot.docs.forEach((doc) => {
               const data = doc.data();
-              // Only add if it's a customer message and we don't have this chatId yet
               if (data.type === "customer_message" && data.chatId && !usersMap.has(data.chatId)) {
                 usersMap.set(data.chatId, {
                   uid: data.chatId,
@@ -90,7 +86,6 @@ const AdminChatMonitor = () => {
           (error) => {
             console.error("🔴 Admin: Customer query failed:", error);
             
-            // Strategy 2: Fallback - get all messages and filter manually
             const fallbackQ = query(
               collection(db, "messages"),
               orderBy("timestamp", "desc"),
@@ -182,7 +177,6 @@ const AdminChatMonitor = () => {
     };
   }, [isAdmin]);
 
-  // 🔥 FIXED: Load messages untuk customer yang dipilih
   useEffect(() => {
     if (!selectedCustomer) {
       setMessages([]);
@@ -215,7 +209,6 @@ const AdminChatMonitor = () => {
           (error) => {
             console.error("🔴 Admin: Message query failed:", error);
             
-            // Fallback tanpa orderBy
             const fallbackQ = query(
               collection(db, "messages"),
               where("chatId", "==", selectedCustomer.uid)
@@ -263,7 +256,6 @@ const AdminChatMonitor = () => {
     
     setSending(true);
     try {
-      // Optimistic update
       const tempMessage = {
         id: `temp-${Date.now()}`,
         text: replyMessage.trim(),
@@ -292,7 +284,6 @@ const AdminChatMonitor = () => {
       console.log("🟢 Admin: Reply sent successfully");
     } catch (e) {
       console.error("🔴 Admin: Send message error:", e);
-      // Remove optimistic update
       setMessages(prev => prev.filter(msg => !msg.isSending));
       alert("Gagal mengirim pesan.");
     } finally {

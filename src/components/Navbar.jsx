@@ -28,7 +28,6 @@ const Navbar = () => {
   const navigationHandlers = {
     home: () => navigate('/home'),
     chat: () => navigate('/chat'),
-    settings: () => navigate('/settings'),
     profile: () => navigate('/profile')
   };
 
@@ -48,12 +47,6 @@ const Navbar = () => {
       icon: FaComments, 
       label: 'Concierge',
       active: isActiveRoute('/chat')
-    },
-    { 
-      key: 'settings', 
-      icon: FaCog, 
-      label: 'Settings',
-      active: isActiveRoute('/settings')
     },
     { 
       key: 'profile', 

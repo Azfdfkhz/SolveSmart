@@ -1,4 +1,3 @@
-// components/PaymentMethodModal.jsx
 import React from 'react';
 import { FaQrcode, FaSpinner, FaTimesCircle } from 'react-icons/fa';
 import { FiCheck, FiCreditCard, FiDollarSign, FiArrowLeft } from 'react-icons/fi';

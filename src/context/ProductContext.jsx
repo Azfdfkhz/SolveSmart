@@ -1,4 +1,4 @@
-// context/ProductContext.jsx
+// context/ProductContext.jsx (Fixed for Multiple Images & Edit)
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   collection,
@@ -77,6 +77,22 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  // Function untuk handle image compatibility (single image -> array)
+  const getProductImages = (productData) => {
+    // Handle both single image (legacy) and multiple images (new)
+    if (productData.images && Array.isArray(productData.images)) {
+      // Filter hanya URL yang valid dan convert Drive links
+      const validImages = productData.images
+        .filter(img => img && img.trim() !== '')
+        .map(img => convertDriveLink(img));
+      
+      return validImages.length > 0 ? validImages : [getDefaultImage()];
+    } else if (productData.image) {
+      return [convertDriveLink(productData.image)]; // Convert single image to array
+    }
+    return [getDefaultImage()]; // Default fallback
+  };
+
   // Function untuk cache busting
   const getImageWithCacheBust = (url) => {
     if (!url) return '';
@@ -146,11 +162,15 @@ export const ProductProvider = ({ children }) => {
       const unsubscribe = onSnapshot(q, 
         (snapshot) => {
           console.log('📦 Products data received:', snapshot.docs.length, 'products');
-          const productsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            image: convertDriveLink(doc.data().image || '')
-          }));
+          const productsData = snapshot.docs.map(doc => {
+            const productData = doc.data();
+            return {
+              id: doc.id,
+              ...productData,
+              // Gunakan helper function untuk handle images
+              images: getProductImages(productData)
+            };
+          });
           setProducts(productsData);
           setError(null);
           setLoading(false);
@@ -220,8 +240,8 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-  // Add new product with image
-  const addProduct = async (productData, imageFile = null) => {
+  // Add new product with multiple images
+  const addProduct = async (productData, imageFiles = []) => {
     if (!user) {
       throw new Error('Harus login untuk menambah produk');
     }
@@ -232,19 +252,33 @@ export const ProductProvider = ({ children }) => {
 
       console.log('➕ Adding product...');
 
-      let imageUrl = productData.image || '';
+      let imageUrls = [];
 
-      if (imageFile) {
-        console.log('📤 Uploading image...');
-        imageUrl = await uploadImage(imageFile);
-        console.log('✅ Image uploaded:', imageUrl);
-      } else if (productData.image) {
-        imageUrl = convertDriveLink(productData.image);
-        console.log('🔗 Converted Drive link:', imageUrl);
-      } else {
-        imageUrl = getDefaultImage();
+      // Upload image files jika ada
+      if (imageFiles && imageFiles.length > 0) {
+        console.log('📤 Uploading', imageFiles.length, 'images...');
+        for (const file of imageFiles) {
+          if (file) {
+            const imageUrl = await uploadImage(file);
+            imageUrls.push(imageUrl);
+          }
+        }
       }
 
+      // Tambahkan URL images dari input
+      if (productData.images && Array.isArray(productData.images)) {
+        const validUrls = productData.images
+          .filter(url => url && url.trim() !== '')
+          .map(url => convertDriveLink(url));
+        imageUrls = [...imageUrls, ...validUrls];
+      }
+
+      // Jika tidak ada gambar, gunakan default
+      if (imageUrls.length === 0) {
+        imageUrls = [getDefaultImage()];
+      }
+
+      // Validasi field wajib
       if (!productData.title?.trim() || !productData.price || !productData.category?.trim()) {
         throw new Error('Harap isi nama produk, harga, dan kategori');
       }
@@ -254,7 +288,7 @@ export const ProductProvider = ({ children }) => {
         subtitle: productData.subtitle?.trim() || '',
         price: parseFloat(productData.price),
         category: productData.category.trim(),
-        image: imageUrl,
+        images: imageUrls, // Gunakan array images
         stock: productData.stock || 10,
         status: 'Active',
         createdBy: user.uid,
@@ -277,8 +311,8 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-  // Update product
-  const updateProduct = async (productId, productData, imageFile = null) => {
+  // Update product dengan multiple images
+  const editProduct = async (productId, productData, imageFiles = []) => {
     if (!user) {
       throw new Error('Harus login untuk update produk');
     }
@@ -289,24 +323,45 @@ export const ProductProvider = ({ children }) => {
       
       console.log('✏️ Updating product:', productId);
 
-      let updateData = {
+      let imageUrls = [];
+
+      // Upload image files baru jika ada
+      if (imageFiles && imageFiles.length > 0) {
+        console.log('📤 Uploading', imageFiles.length, 'new images...');
+        for (const file of imageFiles) {
+          if (file) {
+            const imageUrl = await uploadImage(file);
+            imageUrls.push(imageUrl);
+          }
+        }
+      }
+
+      // Tambahkan URL images dari input (yang sudah ada + baru)
+      if (productData.images && Array.isArray(productData.images)) {
+        const validUrls = productData.images
+          .filter(url => url && url.trim() !== '')
+          .map(url => convertDriveLink(url));
+        imageUrls = [...imageUrls, ...validUrls];
+      }
+
+      // Jika tidak ada gambar, gunakan default
+      if (imageUrls.length === 0) {
+        imageUrls = [getDefaultImage()];
+      }
+
+      const updateData = {
         title: productData.title?.trim() || '',
         subtitle: productData.subtitle?.trim() || '',
         price: productData.price ? parseFloat(productData.price) : 0,
         category: productData.category?.trim() || '',
+        images: imageUrls, // Gunakan array images
         stock: productData.stock || 10,
         status: productData.status || 'Active',
         updatedBy: user.uid,
         updatedAt: new Date()
       };
 
-      if (imageFile) {
-        console.log('📤 Uploading new image...');
-        const imageUrl = await uploadImage(imageFile);
-        updateData.image = imageUrl;
-      } else if (productData.image) {
-        updateData.image = convertDriveLink(productData.image);
-      }
+      console.log('📝 Updating product with data:', updateData);
 
       await updateDoc(doc(db, 'products', productId), updateData);
       console.log('✅ Product updated successfully');
@@ -342,6 +397,8 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  const updateProduct = editProduct;
+
   const value = {
     products,
     cart,
@@ -349,11 +406,13 @@ export const ProductProvider = ({ children }) => {
     actionLoading,
     error,
     addProduct,
-    updateProduct,
+    editProduct,
+    updateProduct, 
     deleteProduct,
     uploadImage,
     getDefaultImage,
     convertDriveLink,
+    getProductImages, 
     getImageWithCacheBust,
     addToCart,
     removeFromCart,

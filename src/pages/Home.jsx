@@ -5,7 +5,7 @@ import { useProduct } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
 import CartSidebar from '../components/CartSidebar';
-import { FiChevronRight, FiStar, FiShoppingBag, FiTrendingUp } from 'react-icons/fi';
+import { FiChevronRight, FiStar, FiShoppingBag, FiTrendingUp, FiPackage, FiAlertCircle } from 'react-icons/fi';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('All');
@@ -14,63 +14,72 @@ const Home = () => {
   const { getCartItemsCount, toggleCart } = useCart();
   const navigate = useNavigate();
 
-  // Generate tabs dari kategori produk yang ada
+  const activeProducts = useMemo(() => {
+    return products.filter(product => 
+      product.status !== 'Inactive' && 
+      (product.stock === undefined || product.stock > 0)
+    );
+  }, [products]);
+
   const tabs = useMemo(() => {
-    const categories = ['All']; // Always include 'All' tab
+    const categories = ['All']; 
     
-    // Extract unique categories from products
-    products.forEach(product => {
+    activeProducts.forEach(product => {
       if (product.category && !categories.includes(product.category)) {
         categories.push(product.category);
       }
     });
 
-    // Fallback categories if no products have categories
     if (categories.length === 1) {
       return ['All', 'Template', 'Web', 'PPT', 'Poster', 'Social Media'];
     }
 
     return categories;
-  }, [products]);
+  }, [activeProducts]);
 
-  // Filter products berdasarkan activeTab
   const filteredProducts = useMemo(() => {
     if (activeTab === 'All') {
-      return products;
+      return activeProducts;
     }
-    return products.filter(product => product.category === activeTab);
-  }, [products, activeTab]);
+    return activeProducts.filter(product => product.category === activeTab);
+  }, [activeProducts, activeTab]);
+
+  const inactiveOrOutOfStockCount = useMemo(() => {
+    return products.filter(product => 
+      product.status === 'Inactive' || 
+      (product.stock !== undefined && product.stock <= 0)
+    ).length;
+  }, [products]);
 
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
-  // Skeleton Loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         <Navbar />
         <CartSidebar />
         <div className="max-w-6xl mx-auto px-6 py-8 pb-24">
-          {/* Welcome Skeleton */}
+          {/* Welcome tulang */}
           <div className="mb-8">
             <div className="h-8 bg-blue-800 rounded-lg w-48 mb-2 animate-pulse"></div>
             <div className="h-4 bg-blue-800 rounded w-64 animate-pulse"></div>
           </div>
 
-          {/* Banner Skeleton */}
+          {/* Banner tulang*/}
           <div className="mb-8">
             <div className="h-48 bg-blue-800 rounded-2xl animate-pulse mb-6"></div>
           </div>
 
-          {/* Tabs Skeleton */}
+          {/* Tabs tulang */}
           <div className="flex space-x-3 mb-8">
             {[1,2,3,4,5].map(item => (
               <div key={item} className="h-10 bg-blue-800 rounded-full w-24 animate-pulse"></div>
             ))}
           </div>
 
-          {/* Products Skeleton */}
+          {/* Products tulang */}
           <div className="space-y-4">
             {[1,2,3].map(item => (
               <div key={item} className="bg-blue-800 bg-opacity-30 rounded-2xl p-4 flex animate-pulse">
@@ -118,11 +127,26 @@ const Home = () => {
             <div className="hidden md:flex items-center space-x-2 bg-blue-800 bg-opacity-50 px-4 py-2 rounded-2xl border border-blue-700">
               <FiTrendingUp className="w-5 h-5 text-cyan-400" />
               <span className="text-white text-sm font-medium">
-                {filteredProducts.length} Products
+                {filteredProducts.length} Available Products
               </span>
             </div>
           </div>
         </div>
+
+        {/* Info tentang produk yang tidak tersedia */}
+        {inactiveOrOutOfStockCount > 0 && (
+          <div className="mb-6 p-4 bg-amber-900 bg-opacity-20 border border-amber-700 border-opacity-30 rounded-2xl backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <FiAlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="text-amber-200 text-sm">
+                  <span className="font-semibold">{inactiveOrOutOfStockCount} product(s)</span> are currently unavailable 
+                  {inactiveOrOutOfStockCount === 1 ? ' (inactive or out of stock)' : ' (inactive or out of stock)'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Hero Banner */}
         <div className="mb-8 relative rounded-3xl overflow-hidden shadow-2xl border border-blue-700 border-opacity-30">
@@ -133,18 +157,18 @@ const Home = () => {
             <div className="max-w-2xl">
               
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                Discover <span className="text-cyan-400">Amazing Templates</span>
+                Disini <span className="text-cyan-400">Nanti Iklan</span>
               </h1>
               
               <p className="text-blue-100 text-lg md:text-xl mb-6 leading-relaxed">
-                Professional templates designed to make your projects stand out with luxury quality
+                propesional bukan? bukan
               </p>
               
               <button 
                 onClick={() => setActiveTab('All')}
                 className="bg-white text-blue-900 px-8 py-3 rounded-2xl font-semibold hover:bg-cyan-50 transition-all duration-300 shadow-lg shadow-blue-900/30 hover:shadow-xl hover:shadow-blue-900/40 transform hover:-translate-y-0.5"
               >
-                Explore All Products
+                gabisa dipencet
               </button>
             </div>
           </div>
@@ -160,10 +184,10 @@ const Home = () => {
         <div className="mb-8">
           <div className="flex space-x-3 overflow-x-auto scrollbar-hide pb-2">
             {tabs.map((tab) => {
-              // Hitung jumlah produk per kategori
+              // Hitung jumlah produk aktif per kategori
               const productCount = tab === 'All' 
-                ? products.length 
-                : products.filter(p => p.category === tab).length;
+                ? activeProducts.length 
+                : activeProducts.filter(p => p.category === tab).length;
 
               return (
                 <button
@@ -175,7 +199,7 @@ const Home = () => {
                       : 'bg-blue-800 bg-opacity-30 text-blue-200 hover:bg-blue-800 hover:bg-opacity-50 border border-blue-700 border-opacity-30'
                   }`}
                 >
-                  <FiShoppingBag className="w-4 h-4" />
+                  <FiShoppingBag className="w-4 h-5" />
                   <span>{tab}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                     activeTab === tab 
@@ -192,10 +216,19 @@ const Home = () => {
 
         {/* Products Count Info */}
         <div className="mb-6">
-          <p className="text-blue-300 text-sm">
-            Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} 
-            {activeTab !== 'All' && ` in ${activeTab}`}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-blue-300 text-sm">
+              Showing {filteredProducts.length} available product{filteredProducts.length !== 1 ? 's' : ''} 
+              {activeTab !== 'All' && ` in ${activeTab}`}
+            </p>
+            
+            {/* Total products info */}
+            {products.length > activeProducts.length && (
+              <p className="text-amber-400 text-xs">
+                {products.length - activeProducts.length} unavailable
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Products Grid */}
@@ -204,25 +237,32 @@ const Home = () => {
             <div className="text-center py-16">
               <div className="bg-blue-800 bg-opacity-20 rounded-3xl p-12 border border-blue-700 border-opacity-30 backdrop-blur-sm">
                 <div className="w-20 h-20 bg-blue-700 bg-opacity-30 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-600 border-opacity-20">
-                  <FiShoppingBag className="w-8 h-8 text-blue-400" />
+                  <FiPackage className="w-8 h-8 text-blue-400" />
                 </div>
                 <h3 className="text-white text-xl font-semibold mb-2">
                   No {activeTab !== 'All' ? activeTab : ''} Products Available
                 </h3>
                 <p className="text-blue-300 text-sm mb-4">
                   {activeTab !== 'All' 
-                    ? `No products found in ${activeTab} category` 
+                    ? `No available products found in ${activeTab} category` 
                     : 'No products available at the moment'
                   }
                 </p>
-                {activeTab !== 'All' && (
-                  <button
-                    onClick={() => setActiveTab('All')}
-                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
-                  >
-                    View All Products
-                  </button>
-                )}
+                <div className="space-y-2">
+                  {activeTab !== 'All' && (
+                    <button
+                      onClick={() => setActiveTab('All')}
+                      className="text-cyan-400 hover:text-cyan-300 text-sm font-medium block"
+                    >
+                      View All Available Products
+                    </button>
+                  )}
+                  {inactiveOrOutOfStockCount > 0 && (
+                    <p className="text-amber-400 text-xs">
+                      {inactiveOrOutOfStockCount} product(s) are currently unavailable
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
@@ -242,7 +282,16 @@ const Home = () => {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                    
+                    {/* Stock Badge */}
+                    {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-white text-xs font-bold">{product.stock}</span>
+                      </div>
+                    )}
+                    
+                    {/* Rating Badge */}
+                    <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
                       <FiStar className="w-3 h-3 text-white" />
                     </div>
                   </div>
@@ -281,6 +330,21 @@ const Home = () => {
                             Rp {product.originalPrice.toLocaleString()}
                           </span>
                         )}
+                        
+                        {/* Stock Info */}
+                        {product.stock !== undefined && (
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            product.stock > 10 
+                              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                              : product.stock > 5
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          }`}>
+                            {product.stock > 10 ? 'Stock Ready' : 
+                             product.stock > 5 ? `${product.stock} lagi` : 
+                             `Only ${product.stock} lagi`}
+                          </span>
+                        )}
                       </div>
                       
                       {/* HANYA TOMBOL DETAIL (CHEVRON) SAJA */}
@@ -294,6 +358,23 @@ const Home = () => {
             ))
           )}
         </div>
+
+        {/* Admin Info - hanya tampil untuk admin */}
+        {user && user.isAdmin && inactiveOrOutOfStockCount > 0 && (
+          <div className="mt-8 p-4 bg-slate-800 bg-opacity-50 border border-slate-700 rounded-2xl backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <FiAlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div>
+                <h4 className="text-amber-300 font-semibold text-sm mb-1">Admin View</h4>
+                <p className="text-slate-300 text-xs">
+                  {inactiveOrOutOfStockCount} product(s) are hidden from customers 
+                  ({products.filter(p => p.status === 'Inactive').length} inactive, 
+                  {products.filter(p => p.stock !== undefined && p.stock <= 0).length} out of stock)
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Floating Cart Button */}
         <div className="fixed bottom-24 right-6 z-40">

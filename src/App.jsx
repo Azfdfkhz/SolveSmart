@@ -1,11 +1,10 @@
-// App.jsx (Updated with CartProvider)
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProductProvider } from './context/ProductContext';
 import { OrderProvider } from './context/OrderContext';
 import { DashboardProvider } from './context/DashboardContext';
-import { CartProvider } from './context/CartContext'; // Import CartProvider
+import { CartProvider } from './context/CartContext';
 import Login from './components/Login';
 
 // Lazy loading components
@@ -17,7 +16,7 @@ const Chat = lazy(() => import('./pages/Chat'));
 const Profile = lazy(() => import('./pages/Profile'));
 const AdminChatMonitor = lazy(() => import('./pages/AdminChatMonitor'));
 const Orders = lazy(() => import('./pages/Orders'));
-
+const AdminReports = lazy(() => import('./pages/AdminReports'));
 // Loading Component
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -78,7 +77,7 @@ function App() {
       <ProductProvider>
         <OrderProvider>
           <DashboardProvider>
-            <CartProvider> {/* Tambahkan CartProvider di sini */}
+            <CartProvider> 
               <div className="App">
                 <Suspense fallback={<LoadingSpinner />}>
                   <Routes>
@@ -164,6 +163,14 @@ function App() {
                       element={
                         <ProtectedRoute requireAdmin={true}>
                           <AdminChatMonitor />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/reports" 
+                      element={
+                        <ProtectedRoute requireAdmin={true}>
+                          <AdminReports />
                         </ProtectedRoute>
                       } 
                     />

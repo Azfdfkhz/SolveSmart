@@ -27,7 +27,6 @@ const Chat = () => {
   const [onlineStatus, setOnlineStatus] = useState(true);
   const messagesEndRef = useRef(null);
 
-  // Redirect admin dengan cepat
   useEffect(() => {
     if (isAdmin) {
       navigate('/admin/chat-monitor');
@@ -35,7 +34,6 @@ const Chat = () => {
     }
   }, [isAdmin, navigate]);
 
-  // 🔥 OPTIMIZED: Load messages dengan fallback strategies
   useEffect(() => {
     if (!user?.uid) {
       setLoading(false);
@@ -50,7 +48,6 @@ const Chat = () => {
 
     const setupChatListener = async () => {
       try {
-        // Strategy 1: Coba query dengan chatId + timestamp (dengan index)
         const q = query(
           collection(db, "messages"),
           where("chatId", "==", user.uid),
@@ -72,7 +69,6 @@ const Chat = () => {
           (error) => {
             console.error("🔴 Indexed query failed:", error);
             
-            // Strategy 2: Fallback - query tanpa orderBy
             const fallbackQ = query(
               collection(db, "messages"),
               where("chatId", "==", user.uid),
@@ -85,7 +81,6 @@ const Chat = () => {
                   id: doc.id,
                   ...doc.data()
                 })).sort((a, b) => {
-                  // Manual sorting
                   try {
                     const timeA = a.timestamp?.toDate?.() || new Date(0);
                     const timeB = b.timestamp?.toDate?.() || new Date(0);
@@ -101,8 +96,6 @@ const Chat = () => {
               },
               (fallbackError) => {
                 console.error("🔴 Fallback also failed:", fallbackError);
-                
-                // Strategy 3: Last resort - load once without realtime
                 loadMessagesOnce();
               }
             );
@@ -158,7 +151,6 @@ const Chat = () => {
     };
   }, [user?.uid]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     if (messages.length > 0 && !loading) {
       setTimeout(() => {
@@ -170,7 +162,6 @@ const Chat = () => {
     }
   }, [messages, loading]);
 
-  // ✉️ Send message dengan optimistic update
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || sending || !user?.uid) return;
 
@@ -178,7 +169,6 @@ const Chat = () => {
     const messageText = inputMessage.trim();
 
     try {
-      // Optimistic UI update
       const tempMessage = {
         id: `temp-${Date.now()}`,
         text: messageText,
@@ -196,7 +186,6 @@ const Chat = () => {
       setMessages(prev => [...prev, tempMessage]);
       setInputMessage("");
 
-      // Send to Firebase
       const messageData = {
         text: messageText,
         sender: user?.displayName || user?.email?.split('@')[0] || "Pembeli",
@@ -216,20 +205,16 @@ const Chat = () => {
     } catch (error) {
       console.error("🔴 Error sending message:", error);
       
-      // Remove optimistic update on error
       setMessages(prev => prev.filter(msg => msg.id !== `temp-${Date.now()}`));
-      
-      // Show error but don't prevent user from trying again
+    
       setError("❌ Gagal mengirim pesan. Silakan coba lagi.");
       
-      // Auto-clear error after 5 seconds
       setTimeout(() => setError(null), 5000);
     } finally {
       setSending(false);
     }
   }, [inputMessage, sending, user]);
 
-  // Handle Enter key
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey && !sending) {
       e.preventDefault();
@@ -237,7 +222,7 @@ const Chat = () => {
     }
   };
 
-  // Format time safely
+
   const formatTime = (timestamp) => {
     if (!timestamp) return "";
     try {
@@ -251,7 +236,6 @@ const Chat = () => {
     }
   };
 
-  // Format date for message groups
   const formatMessageDate = (timestamp) => {
     if (!timestamp) return "";
     try {
@@ -276,7 +260,6 @@ const Chat = () => {
     }
   };
 
-  // Group messages by date
   const groupMessagesByDate = () => {
     const groups = {};
     messages.forEach(message => {

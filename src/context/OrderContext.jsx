@@ -1,4 +1,3 @@
-// context/OrderContext.jsx (FIXED Payment System)
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   collection,

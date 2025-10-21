@@ -1,4 +1,3 @@
-// pages/Orders.jsx (UPDATED dengan Payment System - IMPROVED)
 import React, { useState, useEffect } from 'react';
 import { useOrder } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';

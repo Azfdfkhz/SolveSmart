@@ -16,6 +16,7 @@ import {
   FiCreditCard 
 } from 'react-icons/fi';
 import { FaSpinner, FaQrcode } from 'react-icons/fa'; 
+import QRCodeModal from './QRCodeModal';
 
 const CartSidebar = () => {
   console.log('CartSidebar rendering...');
@@ -71,7 +72,6 @@ const CartSidebar = () => {
 
   const showToast = (message, type = 'success') => {
     console.log(`${type}: ${message}`);
-    // Untuk sementara kita gunakan alert
     alert(`${type === 'error' ? 'Error: ' : ''}${message}`);
   };
 
@@ -96,6 +96,43 @@ const CartSidebar = () => {
     setShowCheckoutForm(true);
   };
 
+  // Fungsi untuk memvalidasi dan membersihkan data order
+  const validateAndCleanOrderData = (orderData) => {
+    // Pastikan semua field memiliki nilai default
+    const cleanedItems = orderData.items.map(item => ({
+      productId: item.id || item.productId || '',
+      title: item.title || 'Unknown Product',
+      subtitle: item.subtitle || '',
+      price: Number(item.price) || 0,
+      image: item.image || '',
+      quantity: Number(item.quantity) || 1,
+      category: item.category || 'uncategorized',
+      // Tambahkan field default lainnya
+      description: item.description || '',
+      slug: item.slug || ''
+    }));
+
+    const cleanedShippingAddress = {
+      fullName: orderData.shippingAddress?.fullName?.trim() || '',
+      note: orderData.shippingAddress?.note?.trim() || '',
+      address: orderData.shippingAddress?.address || '',
+      city: orderData.shippingAddress?.city || '',
+      phone: orderData.shippingAddress?.phone || ''
+    };
+
+    return {
+      items: cleanedItems,
+      shippingAddress: cleanedShippingAddress,
+      totalAmount: Number(safeGetCartTotal()) || 0,
+      status: 'pending',
+      paymentStatus: 'pending',
+      notes: orderData.notes || `Checkout dari cart: ${cartItems.length} item`,
+      customerNote: orderData.customerNote || cleanedShippingAddress.note,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  };
+
   const handleProcessOrder = async () => {
     try {
       console.log('Processing order...');
@@ -105,8 +142,7 @@ const CartSidebar = () => {
         return;
       }
 
-      // Validasi form
-      if (!shippingAddress.fullName) {
+      if (!shippingAddress.fullName || !shippingAddress.fullName.trim()) {
         showToast('Harap isi nama lengkap', 'error');
         return;
       }
@@ -114,17 +150,8 @@ const CartSidebar = () => {
       setProcessingOrder(true);
       console.log('Creating order data...');
 
-      // Buat order data dari cart items
-      const orderData = {
-        items: cartItems.map(item => ({
-          productId: item.id,
-          title: item.title,
-          subtitle: item.subtitle,
-          price: item.price || 0,
-          image: item.image,
-          quantity: item.quantity || 1,
-          category: item.category
-        })),
+      const rawOrderData = {
+        items: cartItems,
         shippingAddress: {
           fullName: shippingAddress.fullName,
           note: shippingAddress.note
@@ -133,9 +160,12 @@ const CartSidebar = () => {
         customerNote: shippingAddress.note
       };
 
-      console.log('Order data:', orderData);
+      // Bersihkan dan validasi data sebelum dikirim
+      const cleanedOrderData = validateAndCleanOrderData(rawOrderData);
+      
+      console.log('Cleaned order data:', cleanedOrderData);
 
-      const order = await createOrder(orderData);
+      const order = await createOrder(cleanedOrderData);
       console.log('Order created:', order);
       
       setCreatedOrder(order);
@@ -236,11 +266,6 @@ const CartSidebar = () => {
     }
   };
 
-  const generateQRCode = (orderId, amount) => {
-    const qrData = `QRIS:ORDER-${orderId}:AMOUNT-${amount}:TIMESTAMP-${Date.now()}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -298,17 +323,18 @@ const CartSidebar = () => {
   return (
     <>
       <div 
-        className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${
           isClosing ? 'opacity-0' : 'opacity-100'
         }`}
         onClick={handleClose}
       />
       
-      {/* Sidebar */}
+      {/* Sidebar - Diperbaiki posisinya agar tidak tertutup navbar */}
       <div 
-        className={`fixed inset-y-0 right-0 w-full max-w-xs bg-gradient-to-b from-slate-900 to-blue-900 z-50 border-l border-blue-700/30 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full max-w-xs bg-gradient-to-b from-slate-900 to-blue-900 z-50 border-l border-blue-700/30 shadow-2xl transform transition-transform duration-300 ease-in-out ${
           isClosing ? 'translate-x-full' : 'translate-x-0'
         }`}
+        style={{ marginTop: '64px' }} // Memberikan margin top agar tidak tertutup navbar
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -334,8 +360,8 @@ const CartSidebar = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex flex-col h-[calc(100vh-60px)]">
+        {/* Main Content Area - Diperbaiki tinggi nya */}
+        <div className="flex flex-col h-[calc(100vh-64px-60px)]"> {/* Kurangi tinggi header cart */}
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-3">
             {!showCheckoutForm ? (
@@ -486,6 +512,7 @@ const CartSidebar = () => {
                       onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
                       className="w-full px-3 py-2 bg-slate-700/50 border border-blue-700/30 rounded-lg text-white placeholder-blue-400 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                       placeholder="Masukkan nama lengkap"
+                      required
                     />
                   </div>
 
@@ -558,7 +585,7 @@ const CartSidebar = () => {
                 <div className="space-y-2">
                   <button
                     onClick={handleProcessOrder}
-                    disabled={processingOrder || !shippingAddress.fullName}
+                    disabled={processingOrder || !shippingAddress.fullName.trim()}
                     className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 disabled:opacity-50 flex items-center justify-center space-x-2"
                   >
                     {processingOrder ? (
@@ -687,101 +714,17 @@ const CartSidebar = () => {
         </div>
       )}
 
-      {/* QR Code Modal */}
-      {showPaymentModal && createdOrder && showQRCode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 w-full max-w-md border border-blue-700/30">
-            <h3 className="text-xl font-bold text-white mb-4 text-center">Scan QR Code</h3>
-            
-            <div className="text-center mb-4">
-              <p className="text-blue-300 mb-2">Scan QR code berikut untuk pembayaran</p>
-              <p className="text-sm text-blue-400">Order ID: #{createdOrder.id?.slice(-8).toUpperCase()}</p>
-              
-              {createdOrder.shippingAddress?.note && (
-                <div className="mt-2 p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                  <p className="text-xs text-amber-300">
-                    <strong>Catatan:</strong> {createdOrder.shippingAddress.note}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-center mb-4">
-              <div className="border-2 border-dashed border-cyan-500/30 rounded-xl p-4 bg-white">
-                <img 
-                  src={generateQRCode(createdOrder.id, createdOrder.totalAmount)}
-                  alt="QR Code"
-                  className="w-64 h-64 mx-auto"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/200x200/1e3a8a/ffffff?text=QR+Error';
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-4">
-              <p className="text-sm text-amber-300 text-center">
-                <strong>Perhatian:</strong> Setelah pembayaran, klik "Sudah Bayar"
-              </p>
-            </div>
-
-            <div className="bg-blue-900/20 rounded-xl p-4 mb-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Total:</span>
-                <span className="font-bold text-cyan-400">{formatCurrency(createdOrder.totalAmount)}</span>
-              </div>
-              
-              <div className="mt-2 pt-2 border-t border-blue-700/30">
-                <div className="flex items-center space-x-2">
-                  {cartItems.slice(0, 2).map((item, index) => (
-                    <div key={index} className="flex items-center space-x-1">
-                      <img 
-                        src={item.image}
-                        alt={item.title}
-                        className="w-6 h-6 object-cover rounded"
-                        onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/24x24/1e3a8a/ffffff?text=IMG';
-                        }}
-                      />
-                      <p className="text-xs text-blue-300">×{item.quantity || 1}</p>
-                    </div>
-                  ))}
-                  {cartItems.length > 2 && (
-                    <p className="text-xs text-cyan-400 ml-auto">+{cartItems.length - 2} lainnya</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowQRCode(false)}
-                disabled={processingPayment}
-                className="flex-1 bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-all disabled:opacity-50"
-              >
-                Kembali
-              </button>
-              <button
-                onClick={handleQRISPayment}
-                disabled={processingPayment}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
-              >
-                {processingPayment ? (
-                  <>
-                    <FaSpinner className="w-4 h-4 animate-spin" />
-                    <span>Memproses...</span>
-                  </>
-                ) : (
-                  <>
-                    <FiCheck className="w-4 h-4" />
-                    <span>Sudah Bayar</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* QR Code Modal - Menggunakan QRCodeModal Component */}
+      <QRCodeModal
+        showQRCode={showQRCode}
+        setShowQRCode={setShowQRCode}
+        createdOrder={createdOrder}
+        handleQRISPayment={handleQRISPayment}
+        processingPayment={processingPayment}
+        formatCurrency={formatCurrency}
+        product={cartItems[0]} // Mengambil product pertama dari cart
+        quantity={cartItems.reduce((total, item) => total + (item.quantity || 1), 0)} // Total quantity semua items
+      />
     </>
   );
 };

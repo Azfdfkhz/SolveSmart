@@ -1,4 +1,4 @@
-// pages/ProductDetail.jsx (SIMPLIFIED VERSION)
+// pages/ProductDetail.jsx (UPDATED FOR MULTIPLE IMAGES)
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,8 @@ import {
   FiHeart, 
   FiShare2, 
   FiStar,
-  FiCheck
+  FiCheck,
+  FiPackage
 } from 'react-icons/fi';
 import { FaSpinner, FaTimesCircle } from 'react-icons/fa';
 
@@ -24,7 +25,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { products, loading } = useProduct();
+  const { products, loading, getProductImages } = useProduct();
   const { createOrder, processPayment, actionLoading } = useOrder();
   const { addToCart, getCartItemsCount, toggleCart } = useCart();
 
@@ -63,9 +64,24 @@ const ProductDetail = () => {
     setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
 
+  // Get product images (support multiple images)
+  const productImages = product ? getProductImages(product) : [];
+
   // FUNGSI ADD TO CART
   const handleAddToCart = () => {
     if (!product) return;
+    
+    // Cek stok produk
+    if (product.stock !== undefined && product.stock < quantity) {
+      showToast(`Stok tidak mencukupi! Hanya tersedia ${product.stock} item`, 'error');
+      return;
+    }
+
+    // Cek status produk
+    if (product.status === 'Inactive') {
+      showToast('Produk ini sedang tidak tersedia', 'error');
+      return;
+    }
     
     addToCart({
       ...product,
@@ -85,7 +101,20 @@ const ProductDetail = () => {
       navigate('/login');
       return;
     }
+    
     if (!product) return;
+
+    // Cek stok produk
+    if (product.stock !== undefined && product.stock < quantity) {
+      showToast(`Stok tidak mencukupi! Hanya tersedia ${product.stock} item`, 'error');
+      return;
+    }
+
+    // Cek status produk
+    if (product.status === 'Inactive') {
+      showToast('Produk ini sedang tidak tersedia', 'error');
+      return;
+    }
     
     setShowCheckoutModal(true);
   };
@@ -105,7 +134,7 @@ const ProductDetail = () => {
           title: product.title,
           subtitle: product.subtitle,
           price: product.price,
-          image: product.image,
+          image: productImages[0] || product.image, // Gunakan gambar pertama
           quantity: quantity,
           category: product.category
         }],
@@ -242,7 +271,9 @@ const ProductDetail = () => {
     );
   }
 
-  const productImages = [product.image];
+  // Cek apakah produk tersedia
+  const isProductAvailable = product.status !== 'Inactive' && 
+    (product.stock === undefined || product.stock > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -293,36 +324,71 @@ const ProductDetail = () => {
           <span className="font-medium text-sm sm:text-base">Kembali</span>
         </button>
 
+        {/* Product Unavailable Warning */}
+        {!isProductAvailable && (
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-700/30 rounded-2xl backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <FiPackage className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <div>
+                <h4 className="text-red-300 font-semibold text-sm mb-1">Produk Tidak Tersedia</h4>
+                <p className="text-red-200 text-xs">
+                  {product.status === 'Inactive' 
+                    ? 'Produk ini sedang tidak aktif' 
+                    : product.stock <= 0 
+                    ? 'Stok produk telah habis'
+                    : 'Produk tidak tersedia'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Product Images */}
           <div className="space-y-4">
+            {/* Main Image - 1:1 Aspect Ratio */}
             <div className="bg-gradient-to-br from-blue-800/30 to-cyan-800/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-blue-700/30">
-              <img
-                src={productImages[selectedImage]}
-                alt={product.title}
-                className="w-full h-48 sm:h-64 md:h-80 object-cover rounded-xl sm:rounded-2xl"
-              />
+              <div className="aspect-square rounded-xl sm:rounded-2xl overflow-hidden">
+                <img
+                  src={productImages[selectedImage]}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
             
-            <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2">
-              {productImages.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
-                    selectedImage === index 
-                      ? 'border-cyan-400 shadow-lg shadow-cyan-500/30' 
-                      : 'border-blue-600/30 hover:border-cyan-400/50'
-                  }`}
-                >
-                  <img 
-                    src={image} 
-                    alt={`Thumbnail ${index + 1}`} 
-                    className="w-full h-full object-cover" 
-                  />
-                </button>
-              ))}
-            </div>
+            {/* Image Thumbnails */}
+            {productImages.length > 1 && (
+              <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2">
+                {productImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 aspect-square w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
+                      selectedImage === index 
+                        ? 'border-cyan-400 shadow-lg shadow-cyan-500/30' 
+                        : 'border-blue-600/30 hover:border-cyan-400/50'
+                    }`}
+                  >
+                    <img 
+                      src={image} 
+                      alt={`Thumbnail ${index + 1}`} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Image Counter */}
+            {productImages.length > 1 && (
+              <div className="text-center">
+                <span className="text-blue-300 text-sm">
+                  Gambar {selectedImage + 1} dari {productImages.length}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -333,6 +399,22 @@ const ProductDetail = () => {
                   <div className="bg-cyan-500/20 px-2 sm:px-3 py-1 rounded-full border border-cyan-400/30">
                     <span className="text-cyan-400 text-xs sm:text-sm">{product.category || 'Template'}</span>
                   </div>
+                  
+                  {/* Stock Badge */}
+                  {product.stock !== undefined && (
+                    <div className={`px-2 sm:px-3 py-1 rounded-full border text-xs sm:text-sm ${
+                      product.stock > 10 
+                        ? 'bg-green-500/20 text-green-400 border-green-400/30'
+                        : product.stock > 0
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-400/30'
+                        : 'bg-red-500/20 text-red-400 border-red-400/30'
+                    }`}>
+                      {product.stock > 10 ? 'Stock Ready' : 
+                       product.stock > 0 ? `${product.stock} left` : 
+                       'Out of Stock'}
+                    </div>
+                  )}
+                  
                   <div className="flex items-center space-x-1 text-amber-400">
                     <FiStar className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span className="text-xs sm:text-sm">4.8</span>
@@ -375,14 +457,16 @@ const ProductDetail = () => {
                   <div className="flex items-center space-x-2 sm:space-x-3 bg-blue-900/30 rounded-lg sm:rounded-xl p-2 border border-blue-700/30">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-800 rounded sm:rounded-lg text-white hover:bg-blue-700 transition-colors text-sm"
+                      disabled={!isProductAvailable}
+                      className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-800 rounded sm:rounded-lg text-white hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       -
                     </button>
                     <span className="text-white font-semibold w-6 sm:w-8 text-center text-sm sm:text-base">{quantity}</span>
                     <button
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-800 rounded sm:rounded-lg text-white hover:bg-blue-700 transition-colors text-sm"
+                      disabled={!isProductAvailable || (product.stock !== undefined && quantity >= product.stock)}
+                      className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-800 rounded sm:rounded-lg text-white hover:bg-blue-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       +
                     </button>
@@ -392,7 +476,8 @@ const ProductDetail = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <button
                     onClick={handleAddToCart}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
+                    disabled={!isProductAvailable}
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <FiShoppingCart className="w-4 h-4" />
                     <span>Keranjang</span>
@@ -400,11 +485,21 @@ const ProductDetail = () => {
                   
                   <button
                     onClick={handleBuyNow}
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all text-sm sm:text-base"
+                    disabled={!isProductAvailable}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Beli Sekarang
                   </button>
                 </div>
+
+                {/* Stock Warning */}
+                {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
+                  <div className="p-3 bg-amber-900/20 border border-amber-700/30 rounded-xl">
+                    <p className="text-amber-300 text-xs text-center">
+                       Stok terbatas! Hanya tersisa {product.stock} item
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -465,14 +560,16 @@ const ProductDetail = () => {
       </div>
 
       {/* Mobile Buy Now Button */}
-      <div className="fixed bottom-4 left-4 right-20 z-20 lg:hidden">
-        <button
-          onClick={handleBuyNow}
-          className="bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-semibold text-center shadow-2xl w-full text-sm"
-        >
-          Beli Sekarang - Rp {product?.price?.toLocaleString()}
-        </button>
-      </div>
+      {isProductAvailable && (
+        <div className="fixed bottom-4 left-4 right-20 z-20 lg:hidden">
+          <button
+            onClick={handleBuyNow}
+            className="bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-semibold text-center shadow-2xl w-full text-sm"
+          >
+            Beli Sekarang - Rp {product?.price?.toLocaleString()}
+          </button>
+        </div>
+      )}
 
       <div className="h-16 lg:h-0"></div>
     </div>
