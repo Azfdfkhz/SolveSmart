@@ -1,4 +1,3 @@
-// pages/Products.jsx (MULTIPLE IMAGES VERSION)
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
