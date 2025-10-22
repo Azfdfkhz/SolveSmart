@@ -28,7 +28,6 @@ export function AuthProvider({ children }) {
   const adminEmails = [
     'azmifadhilfakhrurrazi12@gmail.com',
     'akunabraham711@gmail.com',
-    'akunabraham711@gmail.com',
     'solvesmartcompany.id@gmail.com',
     'fadli.ramadhan.alfarizki@gmail.com',
     'raihanraihan1819@gmail.com'
