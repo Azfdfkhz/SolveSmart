@@ -29,7 +29,9 @@ export function AuthProvider({ children }) {
     'azmifadhilfakhrurrazi12@gmail.com',
     'akunabraham711@gmail.com',
     'akunabraham711@gmail.com',
-    'solvesmartcompany.id@gmail.com'
+    'solvesmartcompany.id@gmail.com',
+    'fadli.ramadhan.alfarizki@gmail.com',
+    'raihanraihan1819@gmail.com'
   ];
 
   const getUserRole = (email) => {
