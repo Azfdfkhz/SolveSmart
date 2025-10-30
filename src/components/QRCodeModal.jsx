@@ -18,7 +18,7 @@ const QRCodeModal = ({
 
   if (!showQRCode || !createdOrder) return null;
 
-  const customQRISImage = '/images/qris-solvesmart.jpg';
+  const customQRISImage = '/Solve.jpg';
 
   const handleDownloadQR = () => {
     const link = document.createElement('a');
