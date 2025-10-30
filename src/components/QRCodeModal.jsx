@@ -71,7 +71,7 @@ const QRCodeModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 rounded-2xl p-6 w-full max-w-lg border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
+      <div className="bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 rounded-2xl p-6 w-full max-w-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
@@ -91,117 +91,135 @@ const QRCodeModal = ({
           </button>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <span className="text-gray-400 text-sm">Order ID</span>
-              <p className="font-mono text-cyan-400 font-bold text-lg">
-                #{createdOrder.id?.slice(-8).toUpperCase()}
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-gray-400 text-sm">Total Amount</span>
-              <p className="font-bold text-white text-xl">
-                {formatCurrency(createdOrder.totalAmount)}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
-            <img 
-              src={product.image} 
-              alt={product.title}
-              className="w-12 h-12 object-cover rounded-lg"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-medium truncate">{product.title}</p>
-              <p className="text-cyan-400 text-sm">Qty: {quantity} × {formatCurrency(product.price)}</p>
-            </div>
-          </div>
-
-          {createdOrder.shippingAddress?.note && (
-            <div className="mt-3 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-              <p className="text-amber-300 text-sm">
-                <strong>📝 Catatan:</strong> {createdOrder.shippingAddress.note}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-6 bg-white/5 rounded-xl p-1">
-          {[
-            { id: 'qr', label: 'QR Code', icon: FaQrcode },
-            { id: 'steps', label: 'Cara Bayar', icon: MdPayment },
-            { id: 'security', label: 'Keamanan', icon: MdOutlineSecurity }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-medium ${
-                activeTab === tab.id 
-                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/25' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <div className="mb-6">
-          {activeTab === 'qr' && (
-            <div className="text-center">
-              <div className="relative inline-block">
-                <div className="border-4 border-cyan-500/30 rounded-2xl p-4 bg-white shadow-2xl">
-                  <img 
-                    src={customQRISImage}
-                    alt="QRIS SolveSmart"
-                    className="w-56 h-56 mx-auto object-contain"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/256x256/1e293b/0ea5e9?text=QRIS+SolveSmart';
-                    }}
-                  />
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left Column - Order Info */}
+          <div className="flex-1">
+            {/* Order Summary */}
+            <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <span className="text-gray-400 text-sm">Order ID</span>
+                  <p className="font-mono text-cyan-400 font-bold text-lg">
+                    #{createdOrder.id?.slice(-8).toUpperCase()}
+                  </p>
                 </div>
-                <div className="absolute -top-3 -right-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
-                  SolveSmart
+                <div className="text-right">
+                  <span className="text-gray-400 text-sm">Total Amount</span>
+                  <p className="font-bold text-white text-xl">
+                    {formatCurrency(createdOrder.totalAmount)}
+                  </p>
                 </div>
               </div>
+              
+              <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
+                <img 
+                  src={product.image} 
+                  alt={product.title}
+                  className="w-12 h-12 object-cover rounded-lg"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium truncate">{product.title}</p>
+                  <p className="text-cyan-400 text-sm">Qty: {quantity} × {formatCurrency(product.price)}</p>
+                </div>
+              </div>
+
+              {createdOrder.shippingAddress?.note && (
+                <div className="mt-3 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                  <p className="text-amber-300 text-sm">
+                    <strong>📝 Catatan:</strong> {createdOrder.shippingAddress.note}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
 
-          {activeTab === 'steps' && <PaymentSteps />}
-          {activeTab === 'security' && <SecurityInfo />}
-        </div>
+            {/* Tab Navigation */}
+            <div className="flex space-x-1 mb-6 bg-white/5 rounded-xl p-1">
+              {[
+                { id: 'qr', label: 'QR Code', icon: FaQrcode },
+                { id: 'steps', label: 'Cara Bayar', icon: MdPayment },
+                { id: 'security', label: 'Keamanan', icon: MdOutlineSecurity }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 py-2 px-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-medium ${
+                    activeTab === tab.id 
+                      ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/25' 
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
 
-        {/* Quick Actions */}
-        <div className="flex space-x-2 mb-6">
-          <button
-            onClick={handleDownloadQR}
-            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-medium hover:scale-105 active:scale-95"
-          >
-            <FaDownload className="w-4 h-4" />
-            <span>Download QR</span>
-          </button>
-          <button
-            onClick={copyOrderInfo}
-            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-medium hover:scale-105 active:scale-95 relative"
-          >
-            <FiCopy className="w-4 h-4" />
-            <span>Copy Info</span>
-            {copied && (
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-2 py-1 rounded text-xs">
-                Copied!
+            {/* Tab Content */}
+            <div className="mb-6">
+              {activeTab === 'steps' && <PaymentSteps />}
+              {activeTab === 'security' && <SecurityInfo />}
+            </div>
+          </div>
+
+          {/* Right Column - QR Code */}
+          <div className="flex-1">
+            {activeTab === 'qr' && (
+              <div className="text-center">
+                <div className="relative inline-block">
+                  <div className="border-4 border-cyan-500/30 rounded-2xl p-6 bg-white shadow-2xl">
+                    <img 
+                      src={customQRISImage}
+                      alt="QRIS SolveSmart"
+                      className="w-72 h-72 mx-auto object-contain"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/288x288/1e293b/0ea5e9?text=QRIS+SolveSmart';
+                      }}
+                    />
+                  </div>
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
+                    SolveSmart
+                  </div>
+                </div>
+                
+                {/* Quick Actions under QR */}
+                <div className="flex space-x-2 mt-6">
+                  <button
+                    onClick={handleDownloadQR}
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-medium hover:scale-105 active:scale-95"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    <span>Download QR</span>
+                  </button>
+                  <button
+                    onClick={copyOrderInfo}
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-medium hover:scale-105 active:scale-95 relative"
+                  >
+                    <FiCopy className="w-4 h-4" />
+                    <span>Copy Info</span>
+                    {copied && (
+                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+                        Copied!
+                      </div>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
-          </button>
+
+            {/* Tab Content for other tabs */}
+            {activeTab !== 'qr' && (
+              <div className="h-full flex items-center justify-center bg-white/5 rounded-2xl p-6 border border-white/10">
+                <div className="text-center text-gray-400">
+                  <FaQrcode className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                  <p>Pindah ke tab QR Code untuk melihat kode pembayaran</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3">
+        <div className="flex space-x-3 mt-6">
           <button
             onClick={() => setShowQRCode(false)}
             disabled={processingPayment}
@@ -228,14 +246,13 @@ const QRCodeModal = ({
           </button>
         </div>
 
-        {/* Support */}
         <div className="text-center mt-6 pt-4 border-t border-white/10">
           <button 
             onClick={() => window.location.href = '/chat'}
             className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center justify-center space-x-2 text-sm mx-auto hover:scale-105"
           >
             <FiMessageCircle className="w-4 h-4" />
-            <span>Butuh bantuan? Chat support kami</span>
+            <span>Butuh bantuan? Chat kami</span>
           </button>
         </div>
       </div>
